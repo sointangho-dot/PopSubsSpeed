@@ -2,7 +2,7 @@
 
 ## Description
 
-PopSubs is a simple Android application developed in Kotlin to load local WebVTT (`.vtt`) **and SubRip (`.srt`)** subtitle files and display the subtitle cues synchronized with a simulated playback timer. This app includes playback controls with Material icons, seeking via a Material Slider, screen awake functionality during playback, and a floating overlay window feature.
+PopSubs is a simple Android application developed in Kotlin to load local WebVTT (`.vtt`) **and SubRip (`.srt`)** subtitle files and display the subtitle cues synchronized with a simulated playback timer. This app includes playback controls, seeking, screen awake functionality during playback, and a floating overlay window feature.
 
 ## Features
 
