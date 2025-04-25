@@ -12,14 +12,12 @@ This project was inspired by the lack of a simple, dedicated **standalone subtit
 
 * **Load Local Subtitle Files:** Select `.vtt` and `.srt` files using the Android system file picker. Includes robust filename retrieval.
 * **VTT/SRT Parsing:** Parses both WebVTT (`.vtt`) and SubRip (`.srt`) file formats to extract timings and text content. Handles basic format variations.
-* **Simulated Playback:** Controls (`Play/Pause`, `Reset`) allow simulating subtitle progression without needing video. Features Material Design icons.
+* **Simulated Playback:** Controls (`Play/Pause`, `Reset`) allow simulating subtitle progression without needing video.
 * **Seeking:** A `Material Slider` allows seeking to specific times within the subtitle file.
 * **Accurate Timing:** Displays elapsed playback time in `MM:SS.ms` format.
 * **Keep Screen Awake:** Option prevents the screen from sleeping during active playback.
 * **Floating Overlay Window:** Displays the current subtitle text in a system overlay window that floats above other applications (similar in concept to the **Penguin Subtitle Player** overlay).
 * **Overlay Toggle:** Easily hide or show the floating overlay window using a button in the main app.
-* **Permissions Handled:** Manages the 'Draw over other apps' permission required for the overlay.
-* **Material Theming:** Basic UI colors themed based on the app icon.
 
 ## Setup & Build
 
