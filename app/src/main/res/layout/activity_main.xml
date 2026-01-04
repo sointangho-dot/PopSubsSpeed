@@ -20,24 +20,52 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="No file selected"
-        android:textAppearance="?attr/textAppearanceCaption" /> <TextView
-    android:id="@+id/textViewCurrentTime"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_gravity="center_horizontal"
-    android:layout_marginTop="20dp"
-    android:fontFamily="monospace"
-    android:text="00:00.000"
-    android:textAppearance="?attr/textAppearanceHeadline6" /> <TextView
-    android:id="@+id/textViewSubtitle"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="10dp"
-    android:layout_marginBottom="10dp"
-    android:gravity="center"
-    android:minLines="3"
-    android:text="[Subtitles will appear here]"
-    android:textAppearance="?attr/textAppearanceBody1" />
+        android:textAppearance="?attr/textAppearanceCaption" />
+
+    <!-- Speed Control Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Speed:"
+            android:textAppearance="?attr/textAppearanceBody1"
+            android:layout_marginEnd="8dp" />
+        
+        <Spinner
+            android:id="@+id/spinnerSpeed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="100dp"
+            android:entries="@array/speed_options" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/textViewCurrentTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:fontFamily="monospace"
+        android:text="00:00.000"
+        android:textAppearance="?attr/textAppearanceHeadline6" />
+
+    <TextView
+        android:id="@+id/textViewSubtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:gravity="center"
+        android:minLines="3"
+        android:text="[Subtitles will appear here]"
+        android:textAppearance="?attr/textAppearanceBody1" />
+
     <com.google.android.material.slider.Slider
         android:id="@+id/sliderPlayback"
         android:layout_width="match_parent"
@@ -45,7 +73,7 @@
         android:layout_marginTop="5dp"
         android:layout_marginBottom="15dp"
         android:valueFrom="0.0"
-        android:valueTo="100.0" android:stepSize="0.0"   android:value="0.0"
+        android:valueTo="100.0" android:stepSize="0.0"    android:value="0.0"
         android:enabled="false" />
 
     <LinearLayout
@@ -61,15 +89,18 @@
             android:layout_height="wrap_content"
             android:enabled="false"
             android:text="Play"
-            app:icon="@drawable/ic_play_arrow" /> <com.google.android.material.button.MaterialButton
-        android:id="@+id/buttonReset"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:enabled="false"
-        android:text="Reset"
-        app:icon="@drawable/ic_replay" /> </LinearLayout>
+            app:icon="@drawable/ic_play_arrow" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonReset"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:enabled="false"
+            android:text="Reset"
+            app:icon="@drawable/ic_replay" />
+    </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/buttonLaunchOverlay"
