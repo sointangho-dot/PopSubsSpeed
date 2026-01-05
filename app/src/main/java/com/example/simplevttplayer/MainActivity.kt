@@ -169,6 +169,28 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    
+   // --- Speed Spinner Setup ---
+    private fun setupSpeedSpinner() {
+        spinnerSpeed.setSelection(2) // Default to 1.0x (index 2)
+        spinnerSpeed.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                playbackSpeed = when (position) {
+                    0 -> 0.5f
+                    1 -> 0.75f
+                    2 -> 1.0f
+                    3 -> 1.25f
+                    4 -> 1.5f
+                    5 -> 2.0f
+                    else -> 1.0f
+                }
+                Log.d(TAG, "Playback speed changed to ${playbackSpeed}x")
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+    }
+
+    
     // --- File Handling & Parsing ---
     @SuppressLint("Range") private fun getFileName(uri: Uri): String? { var f: String? = null; try { contentResolver.query(uri, null, null, null, null)?.use { c -> if (c.moveToFirst()) { val i = c.getColumnIndex(OpenableColumns.DISPLAY_NAME); if (i != -1) f = c.getString(i) } } } catch (e: Exception) { Log.e(TAG, "getFileName error: $uri", e) }; if (f == null) { f = uri.path; val cut = f?.lastIndexOf('/'); if (cut != -1 && cut != null) { f = f?.substring(cut + 1) } }; return f }
     private fun openFilePicker() { val i = Intent(Intent.ACTION_OPEN_DOCUMENT).apply { addCategory(Intent.CATEGORY_OPENABLE); type = "*/*" }; selectSubtitleFileLauncher.launch(i) }
