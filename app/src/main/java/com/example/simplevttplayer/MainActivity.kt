@@ -180,21 +180,25 @@ class MainActivity : AppCompatActivity() {
 
     // --- Speed Spinner Setup ---
     private fun setupSpeedSpinner() {
-        spinnerSpeed.setSelection(2) // Default to 1.0x (index 2)
-        spinnerSpeed.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                playbackSpeed = when (position) {
-                    0 -> 0.5f
-                    1 -> 0.75f
-                    2 -> 1.0f
-                    3 -> 1.25f
-                    4 -> 1.5f
-                    5 -> 2.0f
-                    else -> 1.0f
+    val speedOptions = arrayOf("0.5x", "0.75x", "1.0x", "1.25x", "1.5x", "2.0x")
+    val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, speedOptions)
+    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+    spinnerSpeed.adapter = adapter
+    spinnerSpeed.setSelection(2)  // Default to 1.0x
+    spinnerSpeed.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+            playbackSpeed = when (position) {
+                0 -> 0.5f
+                1 -> 0.75f
+                2 -> 1.0f
+                3 -> 1.25f
+                4 -> 1.5f
+                5 -> 2.0f
+                else -> 1.0f
                 }
-                Log.d(TAG, "Playback speed changed to ${playbackSpeed}x")
+            Log.d(TAG, "Playback speed changed to ${playbackSpeed}x")
             }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
     }
 
@@ -324,7 +328,8 @@ class MainActivity : AppCompatActivity() {
     private val updateRunnable = object : Runnable {
         override fun run() {
             if (!isPlaying) return
-            val elapsedMillis = (System.nanoTime() - startTimeNanos) / 1_000_000
+            val rawelapsedMillis = (System.nanoTime() - startTimeNanos) / 1_000_000
+            val elapsedMillis = (rawElapsedMillis * playbackSpeed).toLong()  // 應用速度
             textViewCurrentTime.text = formatTime(elapsedMillis)
 
             // Update Slider only if user isn't dragging it
