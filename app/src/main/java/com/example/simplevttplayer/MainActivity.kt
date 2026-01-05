@@ -172,7 +172,8 @@ class MainActivity : AppCompatActivity() {
                 val currentText = currentCue?.text ?: ""
                 textViewSubtitle.text = currentText
                 sendSubtitleUpdate(currentText)
-                startTimeNanos = System.nanoTime() - (pausedElapsedTimeMillis * 1_000_000)
+                startTimeNanos = System.nanoTime() - ((pausedElapsedTimeMillis / playbackSpeed).toLong() * 1_000_000)
+                                    // ✅ FIX v1.2: Compensate for playback speed to prevent timebar jump
                 if (wasPlayingBeforeSeek) { startPlayback() }
                 else { setPlayButtonState(false) } // Ensure icon is Play if not resuming
             }
