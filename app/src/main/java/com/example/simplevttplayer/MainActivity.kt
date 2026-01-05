@@ -218,11 +218,11 @@ class MainActivity : AppCompatActivity() {
                     buttonPlayPause.isEnabled = true; buttonReset.isEnabled = true; buttonLaunchOverlay.isEnabled = true
                                         val ADD_MILLISECONDS = 90 * 60 * 1000L  // 90 minutes
                     val duration = (subtitleCues.lastOrNull()?.endTimeMs ?: 0L) + ADD_MILLISECONDS
+                                            playbackEndTimeMs = duration
                     sliderPlayback.valueFrom = 0.0f; sliderPlayback.valueTo = duration.toFloat(); sliderPlayback.value = 0.0f; sliderPlayback.isEnabled = true
                     textViewSubtitle.text = "[Ready to play]"; textViewCurrentTime.text = formatTime(0)
                     isOverlayUIShown = true; setPlayButtonState(false); sendSubtitleUpdate("")
                 } else { Toast.makeText(this, "No cues parsed.", Toast.LENGTH_LONG).show(); resetPlaybackStateOnError() }
-                                        playbackEndTimeMs = duration
             } ?: run { Toast.makeText(this, "Failed file stream.", Toast.LENGTH_LONG).show(); Log.w(TAG, "Null InputStream: $uri"); resetPlaybackStateOnError() }
         } catch (e: Exception) { Log.e(TAG, "load/parse $format error", e); Toast.makeText(this, "Load ${format.uppercase()} error: ${e.message}", Toast.LENGTH_LONG).show(); resetPlaybackStateOnError() }
     }
