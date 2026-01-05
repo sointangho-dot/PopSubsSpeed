@@ -29,6 +29,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.material.button.MaterialButton
 import android.widget.Spinner
 import android.widget.AdapterView
+import android.widget.ArrayAdapter
 
 class MainActivity : AppCompatActivity() {
 
@@ -328,7 +329,7 @@ class MainActivity : AppCompatActivity() {
     private val updateRunnable = object : Runnable {
         override fun run() {
             if (!isPlaying) return
-            val rawelapsedMillis = (System.nanoTime() - startTimeNanos) / 1_000_000
+            val rawElapsedMillis = (System.nanoTime() - startTimeNanos) / 1_000_000
             val elapsedMillis = (rawElapsedMillis * playbackSpeed).toLong()  // 應用速度
             textViewCurrentTime.text = formatTime(elapsedMillis)
 
