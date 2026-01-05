@@ -27,6 +27,8 @@ import android.view.View
 import android.view.WindowManager // *** Import for Keep Screen On ***
 import androidx.core.content.ContextCompat
 import com.google.android.material.button.MaterialButton
+import android.widget.ArrayAdapter
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -61,7 +63,9 @@ class MainActivity : AppCompatActivity() {
     private var pausedElapsedTimeMillis: Long = 0L
     private var currentCueIndex: Int = -1
     private var wasPlayingBeforeSeek = false
-    private var isOverlayUIShown = true
+    private var isOverlayUIShown = true    
+    private var rawElapsedMillis: Long = 0L
+
 
     // --- File Selection Launcher ---
     private val selectSubtitleFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
