@@ -68,6 +68,7 @@ class MainActivity : AppCompatActivity() {
     private var wasPlayingBeforeSeek = false
     private var isOverlayUIShown = true
     private var playbackSpeed: Float = 1.0f
+        private var playbackEndTimeMs: Long = 0L
 
     // --- File Selection Launcher ---
     private val selectSubtitleFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -221,6 +222,7 @@ class MainActivity : AppCompatActivity() {
                     textViewSubtitle.text = "[Ready to play]"; textViewCurrentTime.text = formatTime(0)
                     isOverlayUIShown = true; setPlayButtonState(false); sendSubtitleUpdate("")
                 } else { Toast.makeText(this, "No cues parsed.", Toast.LENGTH_LONG).show(); resetPlaybackStateOnError() }
+                                        playbackEndTimeMs = duration
             } ?: run { Toast.makeText(this, "Failed file stream.", Toast.LENGTH_LONG).show(); Log.w(TAG, "Null InputStream: $uri"); resetPlaybackStateOnError() }
         } catch (e: Exception) { Log.e(TAG, "load/parse $format error", e); Toast.makeText(this, "Load ${format.uppercase()} error: ${e.message}", Toast.LENGTH_LONG).show(); resetPlaybackStateOnError() }
     }
@@ -352,12 +354,10 @@ class MainActivity : AppCompatActivity() {
             if (textChanged || (activeCue == null && newText == "")) { sendSubtitleUpdate(newText) }
 
             if (subtitleCues.isNotEmpty()) {
-                val lastCueEndTime = subtitleCues.last().endTimeMs
-                if (elapsedMillis >= lastCueEndTime) {
+                if (elapsedMillis >= playbackEndTimeMs) {
                     // Call pausePlayback first to handle flags/state/button icon
                     pausePlayback()
-                    // Set final UI state after pausing
-                    textViewCurrentTime.text = formatTime(lastCueEndTime)
+                    textViewCurrentTime.text = formatTime(playbackEndTimeMs)
                     if (!sliderPlayback.isPressed) { sliderPlayback.value = sliderPlayback.valueTo }
                     textViewSubtitle.text = "[Playback Finished]"
                     sendSubtitleUpdate("[Playback Finished]")
