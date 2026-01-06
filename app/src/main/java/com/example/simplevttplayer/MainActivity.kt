@@ -1,3 +1,22 @@
+/**
+ * MainActivity.kt
+ * 
+ * 【主要活動類別】
+ * 這是應用程式的主要 Activity，負責：
+ * - 顯示字幕播放的主界面
+ * - 處理 VTT/SRT 字幕檔案的選擇與解析
+ * - 控制字幕播放的時間軸和速度
+ * - 管理浮動視窗 Overlay Service
+ * - 處理應用程式生命週期（前台/後台切換）
+ * 
+ * 主要功能：
+ * 1. 檔案選擇：選擇 .vtt 或 .srt 字幕檔案
+ * 2. 播放控制：播放、暫停、重置
+ * 3. 速度控制：0.5x ~ 2.0x 播放速度
+ * 4. 時間軸拖曳：使用 Slider 快速跳轉
+ * 5. 浮動視窗：在其他 app 上方顯示字幕
+ */
+
 package com.example.simplevttplayer // **<<< CHECK THIS LINE CAREFULLY!**
 
 import android.annotation.SuppressLint
@@ -33,65 +52,65 @@ import android.widget.ArrayAdapter
 
 class MainActivity : AppCompatActivity() {
 
-    // --- Constants ---
+    // --- Constants --- // 常數定義區
     companion object {
-        private const val ACTION_UPDATE_SUBTITLE_LOCAL = OverlayService.ACTION_UPDATE_SUBTITLE
-        private const val EXTRA_SUBTITLE_TEXT_LOCAL = OverlayService.EXTRA_SUBTITLE_TEXT
-        private val TAG: String = MainActivity::class.java.simpleName
+        private const val ACTION_UPDATE_SUBTITLE_LOCAL = OverlayService.ACTION_UPDATE_SUBTITLE // 廣播動作：更新字幕文字
+        private const val EXTRA_SUBTITLE_TEXT_LOCAL = OverlayService.EXTRA_SUBTITLE_TEXT // 額外資料鍵：字幕文字內容
+        private val TAG: String = MainActivity::class.java.simpleName // 活動標籤：用於日誌
     }
 
     private lateinit var overlayPermissionLauncher: ActivityResultLauncher<Intent>
-
+ // 權限請求啟動器：用於請求螢幕覆蓋權限
     // --- UI Elements ---
     private lateinit var buttonSelectFile: MaterialButton
-    private lateinit var textViewFilePath: TextView
-    private lateinit var textViewCurrentTime: TextView
-    private lateinit var textViewSubtitle: TextView
-    private lateinit var buttonPlayPause: MaterialButton
-    private lateinit var buttonReset: MaterialButton
-    private lateinit var buttonLaunchOverlay: MaterialButton
-    private lateinit var sliderPlayback: Slider
-    private lateinit var spinnerSpeed: Spinner
-
-    // --- Subtitle Data ---
+    private lateinit var textViewFilePath: TextView // UI 元件定義區
+    private lateinit var textViewCurrentTime: TextView // 按鈕：選擇字幕檔案
+    private lateinit var textViewSubtitle: TextView // 文字視圖：顯示檔案路徑
+    private lateinit var buttonPlayPause: MaterialButton // 文字視圖：顯示當前播放時間
+    private lateinit var buttonReset: MaterialButton // 文字視圖：顯示字幕文字
+    private lateinit var buttonLaunchOverlay: MaterialButton // 按鈕：播放/暫停檔案播放
+    private lateinit var sliderPlayback: Slider // 按鈕：重設時間軸到 0:00
+    private lateinit var spinnerSpeed: Spinner // Slider：時間軸控制（備用）
+ // 按鈕：切換覆蓋層顯示/隱藏
+    // --- Subtitle Data --- // Spinner：播放速度選擇器（1.0x - 2.0x）
     data class SubtitleCue( val startTimeMs: Long, val endTimeMs: Long, val text: String )
-
-    private var subtitleCues: List<SubtitleCue> = emptyList()
-    private var selectedFileUri: Uri? = null
-
-    // --- Playback & UI State ---
+ // 字幕檔案 URI：儲存當前選擇的字幕檔
+    private var subtitleCues: List<SubtitleCue> = emptyList() // 播放線程：用於在背景更新時間
+    private var selectedFileUri: Uri? = null // 字幕資料列表：儲存已解析的 SRT 內容
+ // 啟動時間戳：記錄播放開始的系統時間
+    // --- Playback & UI State --- // 播放狀態：true=播放中，false=暫停
     private val handler = Handler(Looper.getMainLooper())
     private var isPlaying = false
     private var startTimeNanos: Long = 0L
     private var pausedElapsedTimeMillis: Long = 0L
-    private var currentCueIndex: Int = -1
-    private var wasPlayingBeforeSeek = false
-    private var isOverlayUIShown = true
-    private var playbackSpeed: Float = 1.0f
-        private var playbackEndTimeMs: Long = 0L
+    private var currentCueIndex: Int = -1 // 當前字幕索引：追蹤已顯示的字幕
+    private var wasPlayingBeforeSeek = false // Seek 前播放標誌：防止 Seek 操作影響當前播放
+    private var isOverlayUIShown = true // 覆蓋層顯示狀態：true=顯示，false=隱藏
+    private var playbackSpeed: Float = 1.0f // 播放速度：預設 1.0 倍速
+        private var playbackEndTimeMs: Long = 0L // 播放結束時間：用於自動停止
 
     // --- File Selection Launcher ---
-    private val selectSubtitleFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.data?.also { uri ->
-                selectedFileUri = uri
-                val fileName = getFileName(uri)
-                resetPlayback() // Reset first
-                if (fileName != null) {
-                    textViewFilePath.text = "File: $fileName"
+    private val selectSubtitleFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result -> // 檔案選擇啟動器區
+        if (result.resultCode == Activity.RESULT_OK) { // 註冊 Activity 結果啟動器：用於檔案選擇器
+            result.data?.data?.also { uri -> // 檢查結果是否為 RESULT_OK
+                selectedFileUri = uri // 取得檔案 URI
+                val fileName = getFileName(uri) // 取得檔案名稱
+                resetPlayback() // Reset first // 重設播放狀態
+                if (fileName != null) { // 如果檔名不為空
+                    textViewFilePath.text = "File: $fileName" // 更新 UI 顯示檔案路徑
                     when {
-                        fileName.lowercase().endsWith(".vtt") -> loadAndParseSubtitleFile(uri, "vtt")
-                        fileName.lowercase().endsWith(".srt") -> loadAndParseSubtitleFile(uri, "srt")
-                        else -> {
-                            Toast.makeText(this, "Not VTT/SRT ($fileName)", Toast.LENGTH_LONG).show()
-                            resetPlaybackStateOnError()
-                            textViewFilePath.text = "File: $fileName (Not VTT/SRT?)"
+                        fileName.lowercase().endsWith(".vtt") -> loadAndParseSubtitleFile(uri, "vtt") // 判斷檔案是否為 .vtt 格式
+                        fileName.lowercase().endsWith(".srt") -> loadAndParseSubtitleFile(uri, "srt") // 判斷檔案是否為 .srt 格式
+                        else -> { // 如果不是 VTT/SRT 格式
+                            Toast.makeText(this, "Not VTT/SRT ($fileName)", Toast.LENGTH_LONG).show() // 顯示錯誤提示
+                            resetPlaybackStateOnError() // 重設播放狀態為錯誤狀態
+                            textViewFilePath.text = "File: $fileName (Not VTT/SRT?)" // 更新 UI 顯示錯誤訊息
                         }
                     }
                 } else {
-                    Toast.makeText(this, "No filename.", Toast.LENGTH_SHORT).show()
-                    resetPlaybackStateOnError()
-                    textViewFilePath.text = "File: (Unknown)"
+                    Toast.makeText(this, "No filename.", Toast.LENGTH_SHORT).show() // 如果沒有檔名，顯示提示
+                    resetPlaybackStateOnError() // 重設播放狀態為錯誤狀態
+                    textViewFilePath.text = "File: (Unknown)" // 更新 UI 顯示未知檔名
                 }
             }
         } else {
@@ -109,33 +128,33 @@ class MainActivity : AppCompatActivity() {
             } else { Log.w(TAG, "Overlay perm not granted post-settings."); Toast.makeText(this, "Overlay permission required.", Toast.LENGTH_SHORT).show() }
         }
 
-        // Init UI Elements
-        buttonSelectFile = findViewById(R.id.buttonSelectFile)
-        textViewFilePath = findViewById(R.id.textViewFilePath)
-        textViewCurrentTime = findViewById(R.id.textViewCurrentTime)
-        textViewSubtitle = findViewById(R.id.textViewSubtitle)
-        buttonPlayPause = findViewById(R.id.buttonPlayPause)
-        buttonReset = findViewById(R.id.buttonReset)
-        buttonLaunchOverlay = findViewById(R.id.buttonLaunchOverlay)
-        sliderPlayback = findViewById(R.id.sliderPlayback) // Use Slider ID
-        spinnerSpeed = findViewById(R.id.spinnerSpeed)
+        // Init UI Elements // 綁定 UI 元件區
+        buttonSelectFile = findViewById(R.id.buttonSelectFile) // 綁定選擇檔案按鈕
+        textViewFilePath = findViewById(R.id.textViewFilePath) // 綁定檔案路徑文字視圖
+        textViewCurrentTime = findViewById(R.id.textViewCurrentTime) // 綁定當前時間文字視圖
+        textViewSubtitle = findViewById(R.id.textViewSubtitle) // 綁定字幕內容文字視圖
+        buttonPlayPause = findViewById(R.id.buttonPlayPause) // 綁定播放/暫停按鈕
+        buttonReset = findViewById(R.id.buttonReset) // 綁定重設按鈕
+        buttonLaunchOverlay = findViewById(R.id.buttonLaunchOverlay) // 綁定啟動覆蓋層按鈕
+        sliderPlayback = findViewById(R.id.sliderPlayback) // Use Slider ID // 綁定 Slider （備用）
+        spinnerSpeed = findViewById(R.id.spinnerSpeed) // 綁定速度選擇 Spinner
 
-        // Set Listeners
-        buttonSelectFile.setOnClickListener { openFilePicker() }
-        buttonPlayPause.setOnClickListener { togglePlayPause() }
-        buttonReset.setOnClickListener { resetPlayback() }
-        buttonLaunchOverlay.setOnClickListener {
-            isOverlayUIShown = !isOverlayUIShown
-            if (isOverlayUIShown) { Log.d(TAG,"Overlay ON"); Toast.makeText(this,"Overlay Shown",Toast.LENGTH_SHORT).show(); handleLaunchOverlayClick(); sendSubtitleUpdate(textViewSubtitle.text.toString())
-            } else { Log.d(TAG,"Overlay OFF"); Toast.makeText(this,"Overlay Hidden",Toast.LENGTH_SHORT).show(); sendSubtitleUpdate("") }
+        // Set Listeners // 設定按鈕點擊事件區
+        buttonSelectFile.setOnClickListener { openFilePicker() } // 選擇檔案按鈕：打開檔案選擇器
+        buttonPlayPause.setOnClickListener { togglePlayPause() } // 播放/暫停按鈕：切換播放狀態
+        buttonReset.setOnClickListener { resetPlayback() } // 重設按鈕：重設時間軸到 0:00
+        buttonLaunchOverlay.setOnClickListener { // 啟動覆蓋層按鈕：切換覆蓋層狀態
+            isOverlayUIShown = !isOverlayUIShown // 切換覆蓋層顯示狀態
+            if (isOverlayUIShown) { Log.d(TAG,"Overlay ON"); Toast.makeText(this,"Overlay Shown",Toast.LENGTH_SHORT).show(); handleLaunchOverlayClick(); sendSubtitleUpdate(textViewSubtitle.text.toString()) // 如果覆蓋層開啟，記錄日誌並顯示提示
+            } else { Log.d(TAG,"Overlay OFF"); Toast.makeText(this,"Overlay Hidden",Toast.LENGTH_SHORT).show(); sendSubtitleUpdate("") } // 如果覆蓋層關閉，記錄日誌並顯示提示，發送空字幕
         }
 
-        setupSliderListener() // Setup listener for the Slider
-        setupSpeedSpinner() // Setup speed control
+        setupSliderListener() // Setup listener for the Slider // 設定 Slider 監聽器（備用）
+        setupSpeedSpinner() // Setup speed control // 設定速度 Spinner
 
-        // Initial state
-        buttonLaunchOverlay.isEnabled = false
-        sliderPlayback.isEnabled = false
+        // Initial state // 初始化狀態區
+        buttonLaunchOverlay.isEnabled = false // 覆蓋層預設關閉
+        sliderPlayback.isEnabled = false // Slider 預設禁用
         setPlayButtonState(false) // Ensure correct initial icon
     }
 
@@ -150,33 +169,33 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        // App returned to foreground. Playback remains paused.
-        Log.d(TAG, "onResume: App returned to foreground. Playback remains paused.")
+    override fun onResume() { // 生命週期：回到前台時觸發
+        super.onResume() // 呼叫父類 onResume
+        // App returned to foreground. Playback remains paused. // App 回到前台，但播放保持暫停狀態
+        Log.d(TAG, "onResume: App returned to foreground. Playback remains paused.") // 記錄日誌：App 回到前台
     }
     // *** ADDED Keep Screen On flag clearing ***
-    override fun onDestroy() {
-        super.onDestroy()
-        handler.removeCallbacks(updateRunnable)
-        stopOverlayService()
-        // Ensure screen on flag is cleared if activity is destroyed
-        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        Log.d(TAG, "onDestroy: Stopped service & cleared keep screen on flag.")
+    override fun onDestroy() { // 生命週期：活動銷毀時觸發
+        super.onDestroy() // 呼叫父類 onDestroy
+        handler.removeCallbacks(updateRunnable) // 移除所有 Handler 回呼
+        stopOverlayService() // 停止覆蓋層服務
+        // Ensure screen on flag is cleared if activity is destroyed // 確保 Activity 銷毀時清除螢幕常亮標誌
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) // 清除螢幕常亮標誌
+        Log.d(TAG, "onDestroy: Stopped service & cleared keep screen on flag.") // 記錄日誌：停止服務並清除旗標
     }
 
     // --- Slider Setup ---
-    private fun setupSliderListener() {
-        sliderPlayback.addOnChangeListener { _, value, fromUser -> // Underscore for unused 'slider' param
-            if (fromUser) { textViewCurrentTime.text = formatTime(value.toLong()) }
+    private fun setupSliderListener() { // 設定 Slider 監聽器（備用功能）
+        sliderPlayback.addOnChangeListener { _, value, fromUser -> // Underscore for unused 'slider' param // 監聽 Slider 值變化（用戶不操作時）
+            if (fromUser) { textViewCurrentTime.text = formatTime(value.toLong()) } // 如果是用戶操作，更新時間顯示
         }
 
-        sliderPlayback.addOnSliderTouchListener(object : OnSliderTouchListener {
+        sliderPlayback.addOnSliderTouchListener(object : OnSliderTouchListener { // 監聽 Slider 觸摸事件
             @SuppressLint("RestrictedApi")
-            override fun onStartTrackingTouch(slider: Slider) {
-                wasPlayingBeforeSeek = isPlaying
-                if (isPlaying) { pausePlayback() }
-                Log.d(TAG, "Slider touch started.")
+            override fun onStartTrackingTouch(slider: Slider) { // 當用戶開始拖拉 Slider
+                wasPlayingBeforeSeek = isPlaying // 記錄操作前的播放狀態
+                if (isPlaying) { pausePlayback() } // 如果正在播放，暫停播放
+                Log.d(TAG, "Slider touch started.") // 記錄日誌：Slider 開始觸摸
             }
 
             @SuppressLint("RestrictedApi")
@@ -191,35 +210,35 @@ class MainActivity : AppCompatActivity() {
                 sendSubtitleUpdate(currentText)
                 startTimeNanos = System.nanoTime() - (pausedElapsedTimeMillis * 1_000_000)
                 if (wasPlayingBeforeSeek) { startPlayback() }
-                else { setPlayButtonState(false) } // Ensure icon is Play if not resuming
+                else { setPlayButtonState(false) } // Ensure icon is Play if not resuming // 如果不恢復播放，確保按鈕為播放圖示
             }
         })
     }
-
-    // --- Speed Spinner Setup ---
-    private fun setupSpeedSpinner() {
-    val speedOptions = arrayOf("0.5x", "0.75x", "1.0x", "1.25x", "1.5x", "2.0x")
-    val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, speedOptions)
-    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-    spinnerSpeed.adapter = adapter
-    spinnerSpeed.setSelection(2)  // Default to 1.0x
-    spinnerSpeed.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-        override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-            playbackSpeed = when (position) {
-                0 -> 0.5f
-                1 -> 0.75f
-                2 -> 1.0f
-                3 -> 1.25f
-                4 -> 1.5f
-                5 -> 2.0f
+ // 速度 Spinner 設定區
+    // --- Speed Spinner Setup --- // 設定速度 Spinner
+    private fun setupSpeedSpinner() { // 定義速度選項陣列：0.5x - 2.0x
+    val speedOptions = arrayOf("0.5x", "0.75x", "1.0x", "1.25x", "1.5x", "2.0x") // 建立 ArrayAdapter 來顯示速度選項
+    val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, speedOptions) // 設定下拉式清單資源
+    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) // 將 adapter 綁定到 Spinner
+    spinnerSpeed.adapter = adapter // 預設選擇第 2 個（1.0x）
+    spinnerSpeed.setSelection(2)  // Default to 1.0x // Spinner 選擇監聽器
+    spinnerSpeed.onItemSelectedListener = object : AdapterView.OnItemSelectedListener { // 當用戶選擇新速度
+        override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) { // 根據 position 設定播放速度
+            playbackSpeed = when (position) { // 0 -> 0.5x
+                0 -> 0.5f // 1 -> 0.75x
+                1 -> 0.75f // 2 -> 1.0x
+                2 -> 1.0f // 3 -> 1.25x
+                3 -> 1.25f // 4 -> 1.5x
+                4 -> 1.5f // 5 -> 2.0x
+                5 -> 2.0f // else -> 1.0x （預設）
                 else -> 1.0f
-                }
+                } // 記錄日誌：播放速度已變更
             Log.d(TAG, "Playback speed changed to ${playbackSpeed}x")
-            }
+            } // 當用戶未選擇任何項目時的回呼
         override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
     }
-
+ // 檔案處理與解析區
     // --- File Handling & Parsing ---
     @SuppressLint("Range") private fun getFileName(uri: Uri): String? { var f: String? = null; try { contentResolver.query(uri, null, null, null, null)?.use { c -> if (c.moveToFirst()) { val i = c.getColumnIndex(OpenableColumns.DISPLAY_NAME); if (i != -1) f = c.getString(i) } } } catch (e: Exception) { Log.e(TAG, "getFileName error: $uri", e) }; if (f == null) { f = uri.path; val cut = f?.lastIndexOf('/'); if (cut != -1 && cut != null) { f = f?.substring(cut + 1) } }; return f }
     private fun openFilePicker() { val i = Intent(Intent.ACTION_OPEN_DOCUMENT).apply { addCategory(Intent.CATEGORY_OPENABLE); type = "*/*" }; selectSubtitleFileLauncher.launch(i) }
