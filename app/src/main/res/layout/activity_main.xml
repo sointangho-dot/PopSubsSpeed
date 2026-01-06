@@ -1,3 +1,16 @@
+<!--
+  activity_main.xml
+  
+  主界面布局檔案：字幕播放器的主要 UI 結構
+  
+  布局結構：
+  - 根元件：LinearLayout（垂直方向）
+  - 選擇檔案按鈕（頂部）
+  - 檔案路徑 + 播放/重設按鈕列（水平）
+  - 時間顯示 + 字幕內容區
+  - 覆蓋層開關 + 速度選擇器（水平）
+  - Slider（備用）
+-->
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -9,12 +22,15 @@
     tools:context=".MainActivity">
 
     <com.google.android.material.button.MaterialButton
+            <!-- 選擇檔案按鈕：用於選擇 VTT/SRT 字幕檔 -->
         android:id="@+id/buttonSelectFile"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Select VTT / SRT File" />
 
     <!-- File Path + Play/Reset Buttons Row -->
+        
+    <!-- 檔案路徑 + 播放/重設按鈕列（水平布局） -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
