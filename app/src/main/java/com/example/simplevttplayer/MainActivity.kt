@@ -64,25 +64,25 @@ class MainActivity : AppCompatActivity() {
     private lateinit var sliderPlayback: Slider // Slider：時間軸控制
     private lateinit var spinnerSpeed: Spinner // Spinner：播放速度選擇
 
-    // --- Subtitle Data ---
-    data class SubtitleCue( val startTimeMs: Long, val endTimeMs: Long, val text: String )
+    // --- Subtitle Data --- // --- 字幕資料定義區 ---
+    data class SubtitleCue( val startTimeMs: Long, val endTimeMs: Long, val text: String ) // 字幕提示資料類別：起始時間/結束時間/文字內容
 
-    private var subtitleCues: List<SubtitleCue> = emptyList()
-    private var selectedFileUri: Uri? = null
+    private var subtitleCues: List<SubtitleCue> = emptyList() // 字幕列表：儲存所有已解析的字幕項目
+    private var selectedFileUri: Uri? = null // 選擇的檔案 URI：當前字幕檔案的位置
 
-    // --- Playback & UI State ---
-    private val handler = Handler(Looper.getMainLooper())
-    private var isPlaying = false
-    private var startTimeNanos: Long = 0L
-    private var pausedElapsedTimeMillis: Long = 0L
-    private var currentCueIndex: Int = -1
-    private var wasPlayingBeforeSeek = false
-    private var isOverlayUIShown = true
-    private var playbackSpeed: Float = 1.0f
-
+    // --- Playback & UI State --- // --- 播放狀態與 UI 狀態區 ---
+    private val handler = Handler(Looper.getMainLooper()) // Handler：用於更新 UI 的主線程處理器
+    private var isPlaying = false // 播放中標誌
+    private var startTimeNanos: Long = 0L // 開始時間戳（奈秒）
+    private var pausedElapsedTimeMillis: Long = 0L // 暫停時的累積時間（毫秒）
+    private var currentCueIndex: Int = -1 // 當前字幕索引
+    private var wasPlayingBeforeSeek = false // Seek 操作前的播放狀態
+    private var isOverlayUIShown = true // 覆蓋層 UI 顯示狀態
+    private var playbackSpeed: Float = 1.0f // 播放速度（倍數）
+ // 播放結束時間（用於自動停止）
     // --- File Selection Launcher ---
-    private val selectSubtitleFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
+    private val selectSubtitleFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result -> // --- 檔案選擇啟動器區 ---
+        if (result.resultCode == Activity.RESULT_OK) { // 註冊 Activity 結果啟動器：用於檔案選擇器
             result.data?.data?.also { uri ->
                 selectedFileUri = uri
                 val fileName = getFileName(uri)
