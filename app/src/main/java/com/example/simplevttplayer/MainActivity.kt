@@ -139,6 +139,22 @@ class MainActivity : AppCompatActivity() {
         setPlayButtonState(false) // Ensure correct initial icon
     }
 
+
+        // *** ADDED to handle app going to background (HOME button) ***
+    override fun onPause() {
+        super.onPause()
+        // If playing, pause when app goes to background
+        if (isPlaying) {
+            pausePlayback()
+            Log.d(TAG, "onPause: Paused playback (app to background)")
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // App returned to foreground. Playback remains paused.
+        Log.d(TAG, "onResume: App returned to foreground. Playback remains paused.")
+    }
     // *** ADDED Keep Screen On flag clearing ***
     override fun onDestroy() {
         super.onDestroy()
