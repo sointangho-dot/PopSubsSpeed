@@ -1,3 +1,13 @@
+/**
+ * MainActivity.kt - 主活動檔案
+ * 
+ * 功能說明：
+ * - 字幕檔案選擇與解析（VTT/SRT 格式）
+ * - 字幕播放控制（播放/暫停/重設/速度調整）
+ * - 懸浮視窗覆蓋層服務管理
+ * - 生命週期處理（修正：切換App時不暫停播放）
+ */
+
 package com.example.simplevttplayer // **<<< CHECK THIS LINE CAREFULLY!**
 
 import android.annotation.SuppressLint
@@ -34,24 +44,25 @@ import android.widget.ArrayAdapter
 class MainActivity : AppCompatActivity() {
 
     // --- Constants ---
+        // --- 常數定義區 ---
     companion object {
-        private const val ACTION_UPDATE_SUBTITLE_LOCAL = OverlayService.ACTION_UPDATE_SUBTITLE
-        private const val EXTRA_SUBTITLE_TEXT_LOCAL = OverlayService.EXTRA_SUBTITLE_TEXT
-        private val TAG: String = MainActivity::class.java.simpleName
+        private const val ACTION_UPDATE_SUBTITLE_LOCAL = OverlayService.ACTION_UPDATE_SUBTITLE // 廣播動作：更新字幕文字
+        private const val EXTRA_SUBTITLE_TEXT_LOCAL = OverlayService.EXTRA_SUBTITLE_TEXT // 額外資料鍵：字幕文字內容
+        private val TAG: String = MainActivity::class.java.simpleName // 活動標籤：用於日誌
     }
 
-    private lateinit var overlayPermissionLauncher: ActivityResultLauncher<Intent>
+    private lateinit var overlayPermissionLauncher: ActivityResultLauncher<Intent> // 權限請求啟動器：用於請求螢幕覆蓋權限
 
-    // --- UI Elements ---
-    private lateinit var buttonSelectFile: MaterialButton
-    private lateinit var textViewFilePath: TextView
-    private lateinit var textViewCurrentTime: TextView
-    private lateinit var textViewSubtitle: TextView
-    private lateinit var buttonPlayPause: MaterialButton
-    private lateinit var buttonReset: MaterialButton
-    private lateinit var buttonLaunchOverlay: MaterialButton
-    private lateinit var sliderPlayback: Slider
-    private lateinit var spinnerSpeed: Spinner
+    // --- UI Elements --- // --- UI 元件定義區 ---
+    private lateinit var buttonSelectFile: MaterialButton // 按鈕：選擇字幕檔案
+    private lateinit var textViewFilePath: TextView // 文字視圖：顯示檔案路徑
+    private lateinit var textViewCurrentTime: TextView // 文字視圖：顯示當前播放時間
+    private lateinit var textViewSubtitle: TextView // 文字視圖：顯示字幕文字
+    private lateinit var buttonPlayPause: MaterialButton // 按鈕：播放/暫停
+    private lateinit var buttonReset: MaterialButton // 按鈕：重設時間軸
+    private lateinit var buttonLaunchOverlay: MaterialButton // 按鈕：啓動覆蓋層
+    private lateinit var sliderPlayback: Slider // Slider：時間軸控制
+    private lateinit var spinnerSpeed: Spinner // Spinner：播放速度選擇
 
     // --- Subtitle Data ---
     data class SubtitleCue( val startTimeMs: Long, val endTimeMs: Long, val text: String )
