@@ -138,6 +138,19 @@ class MainActivity : AppCompatActivity() {
         setPlayButtonState(false) // Ensure correct initial icon
     }
 
+        // *** FIXED: Do NOT pause playback when switching apps - let overlay continue ***
+    override fun onPause() {
+        super.onPause()
+        // Do NOT call pausePlayback() here - let the overlay service continue independently
+        // The OverlayService will keep running even when MainActivity is paused
+        Log.d(TAG, "onPause: App to background, overlay continues running")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // App returned to foreground. Playback continues unchanged.
+        Log.d(TAG, "onResume: App returned to foreground")
+    }
     // *** ADDED Keep Screen On flag clearing ***
     override fun onDestroy() {
         super.onDestroy()
