@@ -14,35 +14,78 @@
         android:layout_height="wrap_content"
         android:text="Select VTT / SRT File" />
 
-    <TextView
-        android:id="@+id/textViewFilePath"
+    <!-- File Path + Play/Reset Buttons Row -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="No file selected"
-        android:textAppearance="?attr/textAppearanceCaption" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
-    <!-- Speed Control Section -->
+        <TextView
+            android:id="@+id/textViewFilePath"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="No file selected"
+            android:textAppearance="?attr/textAppearanceCaption"
+            android:layout_marginEnd="8dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonPlayPause"
+            style="@style/Widget.MaterialComponents.Button.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:text="Play"
+            app:icon="@drawable/ic_play_arrow" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonReset"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:enabled="false"
+            android:text="Reset"
+            app:icon="@drawable/ic_replay" />
+    </LinearLayout>
+
+    <!-- Speed Control + Toggle Overlay Button Row -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         android:orientation="horizontal"
         android:gravity="center_vertical">
-        
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Speed:"
             android:textAppearance="?attr/textAppearanceBody1"
             android:layout_marginEnd="8dp" />
-        
+
         <Spinner
             android:id="@+id/spinnerSpeed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:minWidth="100dp"
             android:entries="@array/speed_options" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonLaunchOverlay"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:text="Toggle Overlay Visibility"
+            android:visibility="visible" />
     </LinearLayout>
 
     <TextView
@@ -73,44 +116,9 @@
         android:layout_marginTop="5dp"
         android:layout_marginBottom="15dp"
         android:valueFrom="0.0"
-        android:valueTo="100.0" android:stepSize="0.0"    android:value="0.0"
+        android:valueTo="100.0"
+        android:stepSize="0.0"
+        android:value="0.0"
         android:enabled="false" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonPlayPause"
-            style="@style/Widget.MaterialComponents.Button.Icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:enabled="false"
-            android:text="Play"
-            app:icon="@drawable/ic_play_arrow" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonReset"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:enabled="false"
-            android:text="Reset"
-            app:icon="@drawable/ic_replay" />
-    </LinearLayout>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/buttonLaunchOverlay"
-        style="@style/Widget.MaterialComponents.Button.TextButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="30dp"
-        android:enabled="false"
-        android:text="Toggle Overlay Visibility"
-        android:visibility="visible" />
 
 </LinearLayout>
