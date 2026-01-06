@@ -100,8 +100,8 @@ class OverlayService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "OverlayService onStartCommand Received")
         // Service is started, view is managed in onCreate/onDestroy
-        // START_NOT_STICKY: If the service is killed, don't restart it automatically
-        return START_NOT_STICKY
+        // START_STICKY: If the service is killed, restart it automatically      
+        return START_STICKY
     }
 
     override fun onDestroy() {
