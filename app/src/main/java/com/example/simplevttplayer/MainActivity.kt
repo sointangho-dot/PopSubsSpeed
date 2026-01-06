@@ -8,38 +8,38 @@
  * - 生命週期處理（修正：切換App時不暫停播放）
  */
 
-package com.example.simplevttplayer // **<<< CHECK THIS LINE CAREFULLY!**
+package com.example.simplevttplayer // **<<< CHECK THIS LINE CAREFULLY!** // 套件聲明：定義程式所屬的套件路徑
 
-import android.annotation.SuppressLint
-import android.app.Activity
-import android.content.Intent
-import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.provider.OpenableColumns
-import android.util.Log
-// No longer using standard Button/SeekBar directly in code
-import android.widget.TextView
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import java.io.BufferedReader
-import java.io.InputStream
-import android.os.Build
-import android.provider.Settings
-import androidx.activity.result.ActivityResultLauncher
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.google.android.material.slider.Slider // Import Slider
-import com.google.android.material.slider.Slider.OnChangeListener
-import com.google.android.material.slider.Slider.OnSliderTouchListener
-import android.view.View
-import android.view.WindowManager // *** Import for Keep Screen On ***
-import androidx.core.content.ContextCompat
-import com.google.android.material.button.MaterialButton
-import android.widget.Spinner
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
+import android.annotation.SuppressLint // 匯入：抑制 Lint 警告的註解
+import android.app.Activity // 匯入：Activity 基礎類別
+import android.content.Intent // 匯入：Intent 意圖類別（用於啟動活動或服務）
+import android.net.Uri // 匯入：Uri 統一資源識別符（用於檔案路徑）
+import androidx.appcompat.app.AppCompatActivity // 匯入：AppCompatActivity 相容性活動基礎類別
+import android.os.Bundle // 匯入：Bundle 資料包（用於傳遞數據）
+import android.os.Handler // 匯入：Handler 處理器（用於主線程通訊）
+import android.os.Looper // 匯入：Looper 循環器（用於消息循環）
+import android.provider.OpenableColumns // 匯入：OpenableColumns 可開啟欄位（用於檔案名稱查詢）
+import android.util.Log // 匯入：Log 日誌類別（用於記錄調試訊息）
+// No longer using standard Button/SeekBar directly in code // 不再直接使用標準 Button/SeekBar
+import android.widget.TextView // 匯入：TextView 文字視圖元件
+import android.widget.Toast // 匯入：Toast 提示訊息元件
+import androidx.activity.result.contract.ActivityResultContracts // 匯入：ActivityResultContracts 活動結果契約
+import java.io.BufferedReader // 匯入：BufferedReader 緩衝讀取器（用於檔案讀取）
+import java.io.InputStream // 匯入：InputStream 輸入串流（用於檔案讀取）
+import android.os.Build // 匯入：Build 系統建置資訊
+import android.provider.Settings // 匯入：Settings 設定類別（用於系統設定）
+import androidx.activity.result.ActivityResultLauncher // 匯入：ActivityResultLauncher 活動結果啟動器
+import androidx.localbroadcastmanager.content.LocalBroadcastManager // 匯入：LocalBroadcastManager 本地廣播管理器
+import com.google.android.material.slider.Slider // Import Slider // 匯入 Slider 滑塊元件
+import com.google.android.material.slider.Slider.OnChangeListener // 匯入：Slider.OnChangeListener 滑塊變更監聽器
+import com.google.android.material.slider.Slider.OnSliderTouchListener // 匯入：Slider.OnSliderTouchListener 滑塊觸摸監聽器
+import android.view.View // 匯入：View 視圖基礎類別
+import android.view.WindowManager // *** Import for Keep Screen On *** // 匯入 WindowManager 視窗管理器（用於螢幕常亮）
+import androidx.core.content.ContextCompat // 匯入：ContextCompat 上下文相容工具
+import com.google.android.material.button.MaterialButton // 匯入：MaterialButton Material Design 按鈕元件
+import android.widget.Spinner // 匯入：Spinner 下拉式選單元件
+import android.widget.AdapterView // 匯入：AdapterView 適配器視圖（用於列表/下拉式選單）
+import android.widget.ArrayAdapter // 匯入：ArrayAdapter 陣列適配器（用於填充列表數據）
 
 class MainActivity : AppCompatActivity() {
 
