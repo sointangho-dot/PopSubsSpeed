@@ -98,13 +98,14 @@ class OverlayService : Service() {
                 WindowManager.LayoutParams.WRAP_CONTENT, // Width
                 WindowManager.LayoutParams.WRAP_CONTENT, // Height
                 layoutFlag, // Type based on Android version
-                // Flags: Not focusable, not touchable (for now), stays within screen bounds
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                // Flags: Not focusable, but ALLOW touchable
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                 PixelFormat.TRANSLUCENT // Allow background transparency
             ).apply {
                 gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL // Position: Bottom Center
                 y = 100 // Offset from bottom edge (adjust as needed)
             }
+
 
             // Add the view to the window manager
             windowManager.addView(overlayView, params)
