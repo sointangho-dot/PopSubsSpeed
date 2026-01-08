@@ -23,6 +23,7 @@ class OverlayService : Service() {
         // These constants MUST match the ones used in MainActivity
         const val ACTION_UPDATE_SUBTITLE = "com.example.simplevttplayer.UPDATE_SUBTITLE"
         const val EXTRA_SUBTITLE_TEXT = "subtitle_text"
+        const val ACTION_PAUSE_PLAY = "com.example.simplevttplayer.PAUSE_PLAY"
         val TAG: String = OverlayService::class.java.simpleName
     }
 
@@ -32,20 +33,28 @@ class OverlayService : Service() {
         private lateinit var buttonPauseIcon: View
     private lateinit var pauseStripe1: View
     private lateinit var pauseStripe2: View
-    private lateinit var params: WindowManager.LayoutParams
+    private lateinit var params: WindowManager.LayoutParams    
+    private var isPaused = false  // Track pause state
+
 
     // Listens for broadcasts from MainActivity containing subtitle text
     private val subtitleUpdateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == ACTION_UPDATE_SUBTITLE) {
-                // Extract text, default to empty string if null
-                val subtitleText = intent.getStringExtra(EXTRA_SUBTITLE_TEXT) ?: ""
-                Log.d(TAG, "Received subtitle broadcast: '$subtitleText'")
-                // Call the function to update the UI based on the text
-                updateSubtitleText(subtitleText)
+            when (intent?.action) {
+                ACTION_UPDATE_SUBTITLE -> {
+                    val subtitleText = intent.getStringExtra(EXTRA_SUBTITLE_TEXT) ?: ""
+                    Log.d(TAG, "Received subtitle broadcast: '$subtitleText'")
+                    updateSubtitleText(subtitleText)
+                }
+                ACTION_PAUSE_PLAY -> {
+                    isPaused = intent.getBooleanExtra("is_paused", false)
+                    updatePauseButtonColor()
+                    Log.d(TAG, "Received pause/play state: isPaused=$isPaused")
+                }
             }
         }
     }
+
 
     override fun onBind(intent: Intent?): IBinder? {
         // Not using binding, so return null
@@ -96,9 +105,13 @@ class OverlayService : Service() {
             Log.d(TAG, "Overlay view added successfully.")
 
             // Register the broadcast receiver using LocalBroadcastManager
-            val filter = IntentFilter(ACTION_UPDATE_SUBTITLE)
+            val filter = IntentFilter().apply {
+                addAction(ACTION_UPDATE_SUBTITLE)
+                addAction(ACTION_PAUSE_PLAY)
+            }
             LocalBroadcastManager.getInstance(this).registerReceiver(subtitleUpdateReceiver, filter)
-            Log.d(TAG, "SubtitleUpdateReceiver registered.")
+            Log.d(TAG, "BroadcastReceiver registered for all actions.")
+
 
         } catch (e: Exception) {
             // Catch potential errors during view inflation or adding to WindowManager
@@ -170,27 +183,28 @@ class OverlayService : Service() {
         }
     }
 
-        // Toggle pause state from overlay button
+    // Toggle pause state from overlay button
     private fun togglePauseFromOverlay() {
-        // Broadcast PAUSE intent to MainActivity
-        val intent = Intent("com.example.simplevttplayer.TOGGLE_PAUSE")
+        isPaused = !isPaused
+        
+        // Broadcast to MainActivity
+        val intent = Intent(ACTION_PAUSE_PLAY).apply {
+            putExtra("is_paused", isPaused)
+        }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
         
-        // Update the pause button color
-        updatePlayPauseState()
+        // Update button color immediately
+        updatePauseButtonColor()
         
-        Toast.makeText(this, "Pause toggled", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, if (isPaused) "Paused" else "Resumed", Toast.LENGTH_SHORT).show()
+        Log.d(TAG, "Pause toggled from overlay: isPaused=$isPaused")
     }
     
-    // Update pause button color based on playback state
-    private fun updatePlayPauseState() {
-        // For now, toggle between blue (#2196F3) and red (#FF0000)
-        // You can connect this to actual playback state from MainActivity
-        val currentColor = (pauseStripe1.background as? android.graphics.drawable.ColorDrawable)?.color
-        val isBlue = currentColor == android.graphics.Color.parseColor("#2196F3")
-        
-        val newColor = if (isBlue) android.graphics.Color.parseColor("#FF0000") else android.graphics.Color.parseColor("#2196F3")
-        pauseStripe1.setBackgroundColor(newColor)
-        pauseStripe2.setBackgroundColor(newColor)
+    // Update pause button color based on state
+    private fun updatePauseButtonColor() {
+        val color = if (isPaused) android.graphics.Color.parseColor("#FF0000") else android.graphics.Color.parseColor("#2196F3")
+        pauseStripe1.setBackgroundColor(color)
+        pauseStripe2.setBackgroundColor(color)
     }
+
 }
