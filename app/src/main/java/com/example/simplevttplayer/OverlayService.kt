@@ -29,6 +29,9 @@ class OverlayService : Service() {
     private lateinit var windowManager: WindowManager
     private lateinit var overlayView: View
     private lateinit var textViewOverlaySubtitle: TextView
+        private lateinit var buttonPauseIcon: View
+    private lateinit var pauseStripe1: View
+    private lateinit var pauseStripe2: View
     private lateinit var params: WindowManager.LayoutParams
 
     // Listens for broadcasts from MainActivity containing subtitle text
@@ -57,6 +60,14 @@ class OverlayService : Service() {
             // Inflate the overlay layout
             overlayView = LayoutInflater.from(this).inflate(R.layout.overlay_layout, null)
             textViewOverlaySubtitle = overlayView.findViewById(R.id.textViewOverlaySubtitle)
+                        buttonPauseIcon = overlayView.findViewById(R.id.buttonPauseIcon)
+            pauseStripe1 = overlayView.findViewById(R.id.pauseStripe1)
+            pauseStripe2 = overlayView.findViewById(R.id.pauseStripe2)
+
+                        // Set up pause button click listener
+            buttonPauseIcon.setOnClickListener {
+                togglePauseFromOverlay()
+            }
 
             // Get WindowManager service
             windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
@@ -157,5 +168,29 @@ class OverlayService : Service() {
         } else {
             Log.w(TAG, "Overlay views not initialized when trying to update text ('$text').")
         }
+    }
+
+        // Toggle pause state from overlay button
+    private fun togglePauseFromOverlay() {
+        // Broadcast PAUSE intent to MainActivity
+        val intent = Intent("com.example.simplevttplayer.TOGGLE_PAUSE")
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+        
+        // Update the pause button color
+        updatePlayPauseState()
+        
+        Toast.makeText(this, "Pause toggled", Toast.LENGTH_SHORT).show()
+    }
+    
+    // Update pause button color based on playback state
+    private fun updatePlayPauseState() {
+        // For now, toggle between blue (#2196F3) and red (#FF0000)
+        // You can connect this to actual playback state from MainActivity
+        val currentColor = (pauseStripe1.background as? android.graphics.drawable.ColorDrawable)?.color
+        val isBlue = currentColor == android.graphics.Color.parseColor("#2196F3")
+        
+        val newColor = if (isBlue) android.graphics.Color.parseColor("#FF0000") else android.graphics.Color.parseColor("#2196F3")
+        pauseStripe1.setBackgroundColor(newColor)
+        pauseStripe2.setBackgroundColor(newColor)
     }
 }
