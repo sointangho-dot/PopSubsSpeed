@@ -268,7 +268,8 @@ class MainActivity : AppCompatActivity() {
                 if (subtitleCues.isNotEmpty()) {
                     Toast.makeText(this, "${format.uppercase()} loaded: ${subtitleCues.size} cues", Toast.LENGTH_SHORT).show()
                     buttonPlayPause.isEnabled = true; buttonReset.isEnabled = true; buttonLaunchOverlay.isEnabled = true
-                val duration = (subtitleCues.lastOrNull()?.endTimeMs ?: 0L) + 5400000L // Add 90 minutes (blank time) to duration                    sliderPlayback.valueFrom = 0.0f; sliderPlayback.valueTo = duration.toFloat(); sliderPlayback.value = 0.0f; sliderPlayback.isEnabled = true
+                val duration = (subtitleCues.lastOrNull()?.endTimeMs ?: 0L) + 5400000L // Add 90 minutes (blank time) to duration                    
+                    sliderPlayback.valueFrom = 0.0f; sliderPlayback.valueTo = duration.toFloat(); sliderPlayback.value = 0.0f; sliderPlayback.isEnabled = true
                     textViewSubtitle.text = "[Ready to play]"; textViewCurrentTime.text = formatTime(0)
                     isOverlayUIShown = true; setPlayButtonState(false); sendSubtitleUpdate("")
                 } else { Toast.makeText(this, "No cues parsed.", Toast.LENGTH_LONG).show(); resetPlaybackStateOnError() }
