@@ -69,14 +69,20 @@ class OverlayService : Service() {
             // Inflate the overlay layout
             overlayView = LayoutInflater.from(this).inflate(R.layout.overlay_layout, null)
             textViewOverlaySubtitle = overlayView.findViewById(R.id.textViewOverlaySubtitle)
-                        buttonPauseIcon = overlayView.findViewById(R.id.buttonPauseIcon)
+            buttonPauseIcon = overlayView.findViewById(R.id.buttonPauseIcon)
             pauseStripe1 = overlayView.findViewById(R.id.pauseStripe1)
             pauseStripe2 = overlayView.findViewById(R.id.pauseStripe2)
 
-                        // Set up pause button click listener
-            buttonPauseIcon.setOnClickListener {
-                togglePauseFromOverlay()
+            if (buttonPauseIcon == null) {
+                Log.e(TAG, "buttonPauseIcon is null! Check overlay_layout.xml IDs")
+            } else {
+                buttonPauseIcon.setOnClickListener {
+                    Log.d(TAG, "Pause button clicked!")
+                    togglePauseFromOverlay()
+                }
+                Log.d(TAG, "Pause button listener set successfully")
             }
+
 
             // Get WindowManager service
             windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
