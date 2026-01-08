@@ -53,6 +53,22 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var overlayPermissionLauncher: ActivityResultLauncher<Intent> // 權限請求啟動器：用於請求螢幕覆蓋權限
 
+    // Receiver to listen for pause/play from overlay
+    private val overlayPausePlayReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == OverlayService.ACTION_PAUSE_PLAY) {
+                val isPaused = intent.getBooleanExtra("is_paused", false)
+                if (isPaused) {
+                    if (isPlaying) pausePlayback()
+                } else {
+                    if (!isPlaying) startPlayback()
+                }
+                Log.d(TAG, "Received pause/play from overlay: isPaused=$isPaused")
+            }
+        }
+    }
+
+    
     // --- UI Elements --- // --- UI 元件定義區 ---
     private lateinit var buttonSelectFile: MaterialButton // 按鈕：選擇字幕檔案
     private lateinit var textViewFilePath: TextView // 文字視圖：顯示檔案路徑
@@ -143,6 +159,12 @@ class MainActivity : AppCompatActivity() {
         setupSliderListener() // Setup listener for the Slider
         setupSpeedSpinner() // Setup speed control
 
+        // Register receiver for overlay pause/play
+        val pausePlayFilter = android.content.IntentFilter(OverlayService.ACTION_PAUSE_PLAY)
+        androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(this).registerReceiver(overlayPausePlayReceiver, pausePlayFilter)
+        Log.d(TAG, "Overlay pause/play receiver registered")
+
+        
         // Initial state
         buttonLaunchOverlay.isEnabled = false
         sliderPlayback.isEnabled = false
@@ -170,6 +192,13 @@ class MainActivity : AppCompatActivity() {
         // Ensure screen on flag is cleared if activity is destroyed
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         Log.d(TAG, "onDestroy: Stopped service & cleared keep screen on flag.")
+
+        // Unregister receiver
+        try {
+            androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(this).unregisterReceiver(overlayPausePlayReceiver)
+        } catch (e: Exception) {
+            Log.w(TAG, "Error unregistering receiver", e)
+        }
     }
 
     // --- Slider Setup ---
@@ -281,6 +310,12 @@ class MainActivity : AppCompatActivity() {
         startTimeNanos = System.nanoTime() - (pausedElapsedTimeMillis * 1_000_000)
         if (isOverlayUIShown) { val c = findCueForTime(pausedElapsedTimeMillis); sendSubtitleUpdate(c?.text ?: "") } else { sendSubtitleUpdate("") }
         handler.post(updateRunnable)
+
+        // Notify overlay of play state
+        val intent = Intent(OverlayService.ACTION_PAUSE_PLAY).apply {
+            putExtra("is_paused", false)
+        }
+        androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
     }
 
     // *** ADDED Keep Screen On logic & Icon change ***
@@ -295,6 +330,11 @@ class MainActivity : AppCompatActivity() {
         // Update paused time only when actually pausing
         pausedElapsedTimeMillis = (System.nanoTime() - startTimeNanos) / 1_000_000
         handler.removeCallbacks(updateRunnable)
+        // Notify overlay of pause state
+        val intent = Intent(OverlayService.ACTION_PAUSE_PLAY).apply {
+            putExtra("is_paused", true)
+        }
+        androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
     }
 
     // *** UPDATED for Slider & Keep Screen On flag ***
