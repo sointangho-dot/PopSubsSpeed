@@ -4,6 +4,8 @@
 
 PopSubs is an Android application for displaying WebVTT (`.vtt`) and SubRip (`.srt`) subtitle files in a **floating overlay window**, independent of any specific video player. It acts as a **standalone subtitle player**, making it useful when watching videos from sources lacking built-in subtitle support, or when you simply have a separate subtitle file you want to display on your screen.
 
+(ThankYou RyuReyhan , modded speed and pause)
+
 ## Motivation
 
 This project was inspired by the lack of a simple, dedicated **standalone subtitle player for Android** similar to popular desktop applications like **Penguin Subtitle Player**. The goal was to create a lightweight **Android app** focused solely on loading a `.vtt` or `.srt` file and displaying the timed text in a configurable overlay, providing a functional equivalent for mobile users needing such a tool.
@@ -31,7 +33,7 @@ There are two ways to get the app:
     * Run on an Android device or emulator (API 23+ recommended).
 
 2.  **Download Pre-built APK:**
-    * Alternatively, check the **[Releases section](releases)** of this repository for a pre-built `app-release.apk` file that you can download and install directly onto your Android device.
+    * Alternatively, check the **[Releases section]((https://github.com/soinThunder-dot/PopSubsSpeed/actions/runs/20811437417))** of this repository for a pre-built `app-release.apk` file that you can download and install directly onto your Android device.
     * *(Note: You may need to enable "Install from unknown sources" in your phone's security settings).*
 
 ## Usage
