@@ -50,16 +50,17 @@
                 android:layout_width="5dp"
                 android:layout_height="18dp"
                 android:background="#2196F3" />
-        </LinearLayout>
     
-        <!-- ✅ 新增：綠色方塊 - 點擊向上移動浮窗 -->
-        <View
-            android:id="@+id/buttonMoveUp"
-            android:layout_width="12dp"
-            android:layout_height="12dp"
-            android:background="#4CAF50"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="Move overlay up" />
+            <!-- ✅ 新增：綠色方塊 - 點擊向上移動浮窗 -->
+            <View
+                android:id="@+id/buttonMoveUp"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:background="#4CAF50"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="Move overlay up" />
+            
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>
