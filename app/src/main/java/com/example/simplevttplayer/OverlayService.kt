@@ -237,19 +237,19 @@ class OverlayService : Service() {
         pauseStripe2.setBackgroundColor(color)
     }
 
-        private fun moveOverlayUpByButtonClick() {
-        if (::params.isInitialized && ::overlayView.isInitialized) {
-            val moveDistance = 18
-            Log.d(TAG, "Moving overlay up by $moveDistance pixels")
-            params.y -= moveDistance
-            try {
-                windowManager.updateViewLayout(overlayView, params)
-                Log.d(TAG, "Overlay moved up. New Y: ${params.y}")
+    private fun moveOverlayUpByButtonClick() {
+    if (::params.isInitialized && ::overlayView.isInitialized) {
+        val moveDistance = 18
+        Log.d(TAG, "Moving overlay up by $moveDistance pixels")
+        params.y += moveDistance
+        try {
+            windowManager.updateViewLayout(overlayView, params)
+            Log.d(TAG, "Overlay moved up. New Y: ${params.y}")
             } catch (e: Exception) {
-                Log.e(TAG, "Error moving overlay up", e)
+            Log.e(TAG, "Error moving overlay up", e)
             }
         } else {
-            Log.w(TAG, "Cannot move overlay: views not initialized")
+        Log.w(TAG, "Cannot move overlay: views not initialized")
         }
     }
 
