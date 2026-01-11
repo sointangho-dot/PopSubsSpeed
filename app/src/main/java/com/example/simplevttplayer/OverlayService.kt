@@ -103,7 +103,7 @@ class OverlayService : Service() {
                 PixelFormat.TRANSLUCENT // Allow background transparency
             ).apply {
                 gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL // Position: Bottom Center
-                y = 100 // Offset from bottom edge (adjust as needed)
+                y = 0 // Offset from bottom edge (adjust as needed)
             }
 
 
