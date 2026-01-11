@@ -77,6 +77,17 @@ class OverlayService : Service() {
             pauseStripe1 = overlayView.findViewById(R.id.pauseStripe1)
             pauseStripe2 = overlayView.findViewById(R.id.pauseStripe2)
 
+                    val buttonMoveUp: View? = overlayView.findViewById(R.id.buttonMoveUp)
+        if (buttonMoveUp != null) {
+            buttonMoveUp.setOnClickListener {
+                Log.d(TAG, "Move up button clicked!")
+                moveOverlayUpByButtonClick()
+            }
+            Log.d(TAG, "Move up button listener set successfully")
+        } else {
+            Log.w(TAG, "buttonMoveUp is null! Check overlay_layout.xml IDs")
+        }
+
             if (buttonPauseIcon == null) {
                 Log.e(TAG, "buttonPauseIcon is null! Check overlay_layout.xml IDs")
             } else {
@@ -224,6 +235,22 @@ class OverlayService : Service() {
         val color = if (isPaused) android.graphics.Color.parseColor("#FF0000") else android.graphics.Color.parseColor("#2196F3")
         pauseStripe1.setBackgroundColor(color)
         pauseStripe2.setBackgroundColor(color)
+    }
+
+        private fun moveOverlayUpByButtonClick() {
+        if (::params.isInitialized && ::overlayView.isInitialized) {
+            val moveDistance = 18
+            Log.d(TAG, "Moving overlay up by $moveDistance pixels")
+            params.y -= moveDistance
+            try {
+                windowManager.updateViewLayout(overlayView, params)
+                Log.d(TAG, "Overlay moved up. New Y: ${params.y}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error moving overlay up", e)
+            }
+        } else {
+            Log.w(TAG, "Cannot move overlay: views not initialized")
+        }
     }
 
 }
