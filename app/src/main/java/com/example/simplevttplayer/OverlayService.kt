@@ -224,9 +224,8 @@ class OverlayService : Service() {
     // Update pause button color based on state
     // Update subtitle background color based on pause state
     private fun updateSubtitlePauseState() {
-        val bgColor = if (isPaused) "#FF5252" else "#4D000000"  // Red=paused, Black=playing
-        textViewOverlaySubtitle.setBackgroundColor(android.graphics.Color.parseColor(bgColor))
-    }
+        val textColor = if (isPaused) "#FF5252" else "#FFFFFF"  // Red=paused, White=playing        textViewOverlaySubtitle.setBackgroundColor(android.graphics.Color.parseColor(bgColor))
+        textViewOverlaySubtitle.setTextColor(android.graphics.Color.parseColor(textColor))    }
     private fun moveOverlayUpByButtonClick() {
     if (::params.isInitialized && ::overlayView.isInitialized) {
         val moveDistance = 18
