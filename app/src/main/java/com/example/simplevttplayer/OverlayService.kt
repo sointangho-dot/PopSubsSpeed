@@ -30,9 +30,6 @@ class OverlayService : Service() {
     private lateinit var windowManager: WindowManager
     private lateinit var overlayView: View
     private lateinit var textViewOverlaySubtitle: TextView
-        private lateinit var buttonPauseIcon: View
-    private lateinit var pauseStripe1: View
-    private lateinit var pauseStripe2: View
     private lateinit var params: WindowManager.LayoutParams    
 
         // ⬇️ 添加這 2 行
@@ -52,7 +49,7 @@ class OverlayService : Service() {
                 }
                 ACTION_PAUSE_PLAY -> {
                     isPaused = intent.getBooleanExtra("is_paused", false)
-                    updatePauseButtonColor()
+                    updateSubtitlePauseState()
                     Log.d(TAG, "Received pause/play state: isPaused=$isPaused")
                 }
             }
@@ -73,10 +70,12 @@ class OverlayService : Service() {
             // Inflate the overlay layout
             overlayView = LayoutInflater.from(this).inflate(R.layout.overlay_layout, null)
             textViewOverlaySubtitle = overlayView.findViewById(R.id.textViewOverlaySubtitle)
-            buttonPauseIcon = overlayView.findViewById(R.id.buttonPauseIcon)
-            pauseStripe1 = overlayView.findViewById(R.id.pauseStripe1)
-            pauseStripe2 = overlayView.findViewById(R.id.pauseStripe2)
 
+        // Set click listener on subtitle to toggle pause
+        textViewOverlaySubtitle.setOnClickListener {
+            Log.d(TAG, "Subtitle clicked - toggle pause!")
+            togglePauseFromOverlay()
+        }
                     val buttonMoveUp: View? = overlayView.findViewById(R.id.buttonMoveUp)
         if (buttonMoveUp != null) {
             buttonMoveUp.setOnClickListener {
@@ -88,14 +87,6 @@ class OverlayService : Service() {
             Log.w(TAG, "buttonMoveUp is null! Check overlay_layout.xml IDs")
         }
 
-            if (buttonPauseIcon == null) {
-                Log.e(TAG, "buttonPauseIcon is null! Check overlay_layout.xml IDs")
-            } else {
-                buttonPauseIcon.setOnClickListener {
-                    Log.d(TAG, "Pause button clicked!")
-                    togglePauseFromOverlay()
-                }
-                Log.d(TAG, "Pause button listener set successfully")
             }
 
 
@@ -224,19 +215,18 @@ class OverlayService : Service() {
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
         
         // Update button color immediately
-        updatePauseButtonColor()
+        updateSubtitlePauseState()
         
         Toast.makeText(this, if (isPaused) "Paused" else "Resumed", Toast.LENGTH_SHORT).show()
         Log.d(TAG, "Pause toggled from overlay: isPaused=$isPaused")
     }
     
     // Update pause button color based on state
-    private fun updatePauseButtonColor() {
-        val color = if (isPaused) android.graphics.Color.parseColor("#FF0000") else android.graphics.Color.parseColor("#2196F3")
-        pauseStripe1.setBackgroundColor(color)
-        pauseStripe2.setBackgroundColor(color)
+    // Update subtitle background color based on pause state
+    private fun updateSubtitlePauseState() {
+        val bgColor = if (isPaused) "#FF5252" else "#4D000000"  // Red=paused, Black=playing
+        textViewOverlaySubtitle.setBackgroundColor(android.graphics.Color.parseColor(bgColor))
     }
-
     private fun moveOverlayUpByButtonClick() {
     if (::params.isInitialized && ::overlayView.isInitialized) {
         val moveDistance = 18
