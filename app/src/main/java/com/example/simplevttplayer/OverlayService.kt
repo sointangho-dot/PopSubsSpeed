@@ -31,6 +31,7 @@ class OverlayService : Service() {
     private lateinit var overlayView: View
     private lateinit var textViewOverlaySubtitle: TextView
     private lateinit var params: WindowManager.LayoutParams    
+        private var totalMoveDistancePixels = 0  // ✅ 追蹤總共向上移動了多少
 
         // ⬇️ 添加這 2 行
     private var lastUpdateTime = 0L
@@ -228,6 +229,7 @@ class OverlayService : Service() {
     private fun moveOverlayUpByButtonClick() {
     if (::params.isInitialized && ::overlayView.isInitialized) {
         val moveDistance = 18
+                totalMoveDistancePixels += moveDistance  // ✅ 只加這一行
         Log.d(TAG, "Moving overlay up by $moveDistance pixels")
         params.y += moveDistance  // ✅ 改成 -= 才是向上
         try {
@@ -238,6 +240,19 @@ class OverlayService : Service() {
             }
         } else {
             Log.w(TAG, "Cannot move overlay: views not initialized")
+
+                private fun resetOverlayPosition() {
+        if (::params.isInitialized && ::overlayView.isInitialized) {
+            params.y = 0  // 重置回最下面
+            totalMoveDistancePixels = 0  // ✅ 同時重置已移動的距離
+            try {
+                windowManager.updateViewLayout(overlayView, params)
+                Log.d(TAG, "Overlay position reset to Y: 0, Move distance reset to 0")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error resetting overlay position", e)
+            }
+        }
+    }
         }
     }
 
