@@ -22,7 +22,7 @@
             android:text="[Subtitle Overlay]"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
-            android:padding="8dp"
+            android:padding="4dp"
             android:background="#4D000000"
             android:clickable="true"
             android:focusable="true"
