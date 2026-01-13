@@ -331,8 +331,9 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "Screen allowed to turn off.")
 
         // Update paused time only when actually pausing
+        handler.removeCallbacks(updateRunnable)  // ✅ 最先做
         pausedElapsedTimeMillis = (System.nanoTime() - startTimeNanos) / 1_000_000
-        handler.removeCallbacks(updateRunnable)
+
         // Notify overlay of pause state
         val intent = Intent(OverlayService.ACTION_PAUSE_PLAY).apply {
             putExtra("is_paused", true)
