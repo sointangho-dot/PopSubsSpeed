@@ -193,15 +193,15 @@ class OverlayService : Service() {
             } else {
                 // Show the overlay view and set the text if text is not blank
                 // Check current visibility to avoid redundant calls
-                /*if (overlayView.visibility != View.VISIBLE) {
+                //if (overlayView.visibility != View.VISIBLE) {
                     Log.d(TAG, "Showing overlay view.")
                     overlayView.visibility = View.VISIBLE
-                }
-                textViewOverlaySubtitle.text = text*/
-                // ✅ 修復：無論如何都要設為 VISIBLE（重新顯示）
-                overlayView.visibility = View.VISIBLE
+                //}
                 textViewOverlaySubtitle.text = text
-                Log.d(TAG, "Updating subtitle: $text")
+                // ✅ 修復：無論如何都要設為 VISIBLE（重新顯示）
+                //overlayView.visibility = View.VISIBLE
+                //textViewOverlaySubtitle.text = text
+                //Log.d(TAG, "Updating subtitle: $text")
             }
         } else {
             Log.w(TAG, "Overlay views not initialized when trying to update text ('$text').")
