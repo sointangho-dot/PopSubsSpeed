@@ -241,7 +241,7 @@ class OverlayService : Service() {
         } else {
             Log.w(TAG, "Cannot move overlay: views not initialized")
 
-                private fun resetOverlayPosition() {
+                  fun resetOverlayPosition() {
         if (::params.isInitialized && ::overlayView.isInitialized) {
             params.y = 0  // 重置回最下面
             totalMoveDistancePixels = 0  // ✅ 同時重置已移動的距離
