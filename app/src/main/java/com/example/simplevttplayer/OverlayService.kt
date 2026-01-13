@@ -33,9 +33,9 @@ class OverlayService : Service() {
     private lateinit var params: WindowManager.LayoutParams    
         private var totalMoveDistancePixels = 0  // ✅ 追蹤總共向上移動了多少
 
-        // ⬇️ 添加這 2 行
-    private var lastUpdateTime = 0L
-    private val UPDATE_THROTTLE_MS = 100L  // 100毫秒最小間隔
+    // ⬇️ 添加這 2 行
+    //private var lastUpdateTime = 0L
+    //private val UPDATE_THROTTLE_MS = 100L  // 100毫秒最小間隔
     private var isPaused = false  // Track pause state
 
 
@@ -170,7 +170,9 @@ class OverlayService : Service() {
     // *** THIS FUNCTION CONTAINS THE LOGIC TO HIDE/SHOW BASED ON TEXT ***
     // Function to update the text view in the overlay
     private fun updateSubtitleText(text: String) {
-                // ⬇️ 在函數最開始添加這 5 行
+
+        /*
+        // ⬇️ 在函數最開始添加這 5 行
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastUpdateTime < UPDATE_THROTTLE_MS) {
             Log.d(TAG, "Update throttled (too frequent)")
@@ -178,6 +180,8 @@ class OverlayService : Service() {
         }
         lastUpdateTime = currentTime
         // ⬆️ 到這裡結束
+        */
+        
         // Check if views are initialized before accessing them
         // This prevents crashes if update is called before onCreate finishes or after onDestroy starts
         if (::textViewOverlaySubtitle.isInitialized && ::overlayView.isInitialized) {
