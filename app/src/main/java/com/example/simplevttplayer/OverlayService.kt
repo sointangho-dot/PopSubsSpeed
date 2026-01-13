@@ -70,53 +70,51 @@ class OverlayService : Service() {
             // Inflate the overlay layout
             overlayView = LayoutInflater.from(this).inflate(R.layout.overlay_layout, null)
             textViewOverlaySubtitle = overlayView.findViewById(R.id.textViewOverlaySubtitle)
-
-        // Set click listener on subtitle to toggle pause
-        textViewOverlaySubtitle.setOnClickListener {
-            Log.d(TAG, "Subtitle clicked - toggle pause!")
-            togglePauseFromOverlay()
-        }
-                    val buttonMoveUp: View? = overlayView.findViewById(R.id.buttonMoveUp)
-        if (buttonMoveUp != null) {
-            buttonMoveUp.setOnClickListener {
-                Log.d(TAG, "Move up button clicked!")
-                moveOverlayUpByButtonClick()
+        
+            // Set click listener on subtitle to toggle pause
+            textViewOverlaySubtitle.setOnClickListener {
+                Log.d(TAG, "Subtitle clicked - toggle pause!")
+                togglePauseFromOverlay()
             }
-            Log.d(TAG, "Move up button listener set successfully")
-        } else {
-            Log.w(TAG, "buttonMoveUp is null! Check overlay_layout.xml IDs")
-        }
-
+            
+            val buttonMoveUp: View? = overlayView.findViewById(R.id.buttonMoveUp)
+            if (buttonMoveUp != null) {
+                buttonMoveUp.setOnClickListener {
+                    Log.d(TAG, "Move up button clicked!")
+                    moveOverlayUpByButtonClick()
+                }
+                Log.d(TAG, "Move up button listener set successfully")
+            } else {
+                Log.w(TAG, "buttonMoveUp is null! Check overlay_layout.xml IDs")
             }
-
-
+        
+            // ✅ 把下面這些都移進來！
+            
             // Get WindowManager service
             windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-
+        
             // Define layout parameters for the overlay window
             val layoutFlag: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             } else {
-                WindowManager.LayoutParams.TYPE_PHONE // Requires different permission handling potentially
+                WindowManager.LayoutParams.TYPE_PHONE
             }
-
+        
             params = WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT, // Width
-                WindowManager.LayoutParams.WRAP_CONTENT, // Height
-                layoutFlag, // Type based on Android version
-                // Flags: Not focusable, but ALLOW touchable
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                layoutFlag,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-                PixelFormat.TRANSLUCENT // Allow background transparency
+                PixelFormat.TRANSLUCENT
             ).apply {
-                gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL // Position: Bottom Center
-                y = 0 // Offset from bottom edge (adjust as needed)
+                gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+                y = 0
             }
-
-
+        
             // Add the view to the window manager
             windowManager.addView(overlayView, params)
             Log.d(TAG, "Overlay view added successfully.")
-
+        
             // Register the broadcast receiver using LocalBroadcastManager
             val filter = IntentFilter().apply {
                 addAction(ACTION_UPDATE_SUBTITLE)
@@ -124,14 +122,13 @@ class OverlayService : Service() {
             }
             LocalBroadcastManager.getInstance(this).registerReceiver(subtitleUpdateReceiver, filter)
             Log.d(TAG, "BroadcastReceiver registered for all actions.")
-
-
+        
         } catch (e: Exception) {
-            // Catch potential errors during view inflation or adding to WindowManager
             Log.e(TAG, "Error during OverlayService onCreate", e)
             Toast.makeText(this, "Failed to create overlay.", Toast.LENGTH_SHORT).show()
-            stopSelf() // Stop the service if initialization fails
+            stopSelf()
         }
+
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -193,10 +190,10 @@ class OverlayService : Service() {
             } else {
                 // Show the overlay view and set the text if text is not blank
                 // Check current visibility to avoid redundant calls
-                if (overlayView.visibility != View.VISIBLE) {
-                    Log.d(TAG, "Showing overlay view.")
-                    overlayView.visibility = View.VISIBLE
-                }
+                //if (overlayView.visibility != View.VISIBLE) {
+                Log.d(TAG, "Showing overlay view.")
+                overlayView.visibility = View.VISIBLE
+                //}
                 textViewOverlaySubtitle.text = text
             }
         } else {
@@ -224,13 +221,15 @@ class OverlayService : Service() {
     // Update pause button color based on state
     // Update subtitle background color based on pause state
     private fun updateSubtitlePauseState() {
-        val textColor = if (isPaused) "#FF5252" else "#FFFFFF"  // Red=paused, White=playing        textViewOverlaySubtitle.setBackgroundColor(android.graphics.Color.parseColor(bgColor))
-        textViewOverlaySubtitle.setTextColor(android.graphics.Color.parseColor(textColor))    }
+        val textColor = if (isPaused) android.graphics.Color.RED else android.graphics.Color.WHITE
+        textViewOverlaySubtitle.setTextColor(textColor)
+        Log.d(TAG, "Updated subtitle color: isPaused=$isPaused, color=${if (isPaused) "RED" else "WHITE"}")
+    }
     private fun moveOverlayUpByButtonClick() {
     if (::params.isInitialized && ::overlayView.isInitialized) {
         val moveDistance = 18
         Log.d(TAG, "Moving overlay up by $moveDistance pixels")
-        params.y += moveDistance
+        params.y += moveDistance  // ✅ 改成 -= 才是向上
         try {
             windowManager.updateViewLayout(overlayView, params)
             Log.d(TAG, "Overlay moved up. New Y: ${params.y}")
@@ -238,7 +237,7 @@ class OverlayService : Service() {
             Log.e(TAG, "Error moving overlay up", e)
             }
         } else {
-        Log.w(TAG, "Cannot move overlay: views not initialized")
+            Log.w(TAG, "Cannot move overlay: views not initialized")
         }
     }
 
