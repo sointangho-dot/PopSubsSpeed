@@ -188,10 +188,10 @@ class OverlayService : Service() {
             if (text.isBlank()) {
                 // Hide the entire overlay view if the text is blank/empty
                 // Check current visibility to avoid redundant calls
-                if (overlayView.visibility != View.GONE) {
+                //if (overlayView.visibility != View.GONE) {
                     Log.d(TAG, "Hiding overlay view (blank text received).")
                     overlayView.visibility = View.GONE
-                }
+                
             } else {
                 // Show the overlay view and set the text if text is not blank
                 // Check current visibility to avoid redundant calls
