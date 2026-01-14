@@ -569,21 +569,21 @@ class MainActivity : AppCompatActivity() {
         override fun run() {
             if (!isPlaying) return
             val rawElapsedMillis = (System.nanoTime() - startTimeNanos) / 1_000_000
-            val elapsedMillis = (rawElapsedMillis * playbackSpeed).toLong()  // 應用速度
-            textViewCurrentTime.text = formatTime(elapsedMillis)
+            val displayElapsedMillis = (rawElapsedMillis * playbackSpeed).toLong()  // 應用速度
+            textViewCurrentTime.text = formatTime(displayElapsedMillis)
 
             // Update Slider only if user isn't dragging it
             // Also check bounds to prevent crash if time slightly exceeds max due to timing
             if (!sliderPlayback.isPressed) {
-                if (elapsedMillis.toFloat() >= sliderPlayback.valueFrom && elapsedMillis.toFloat() <= sliderPlayback.valueTo) {
-                    sliderPlayback.value = elapsedMillis.toFloat()
-                } else if (elapsedMillis.toFloat() > sliderPlayback.valueTo) {
+                if (displayElapsedMillis.toFloat() >= sliderPlayback.valueFrom && displayElapsedMillis.toFloat() <= sliderPlayback.valueTo) {
+                    sliderPlayback.value = displayElapsedMillis.toFloat()
+                } else if (displayElapsedMillis.toFloat() > sliderPlayback.valueTo) {
                     // If time exceeded max, clamp slider value to max
                     sliderPlayback.value = sliderPlayback.valueTo
                 }
             }
 
-            val activeCue = findCueForTime(elapsedMillis)
+            val activeCue = findCueForTime(rawElapsedMillis)
             val newText = activeCue?.text ?: ""
             var textChanged = false
             if (textViewSubtitle.text != newText) { textViewSubtitle.text = newText; textChanged = true }
@@ -591,7 +591,7 @@ class MainActivity : AppCompatActivity() {
 
             if (subtitleCues.isNotEmpty()) {
                 val lastCueEndTime = subtitleCues.last().endTimeMs
-                if (elapsedMillis >= lastCueEndTime) {
+                if (rawElapsedMillis >= lastCueEndTime) {
                     // Call pausePlayback first to handle flags/state/button icon
                     pausePlayback()
                     // Set final UI state after pausing
