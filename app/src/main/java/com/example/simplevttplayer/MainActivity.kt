@@ -286,16 +286,188 @@ class MainActivity : AppCompatActivity() {
     // --- SRT Parsing Logic ---
     private fun parseSrt(inputStream: InputStream): List<SubtitleCue> { val c=mutableListOf<SubtitleCue>(); val r=inputStream.bufferedReader(Charsets.UTF_8); try { var l: String?; while (r.readLine().also { l = it } != null) { val tL = l?.trim(); if (tL.isNullOrEmpty()) continue; if (tL.toIntOrNull() != null) { val timeL = r.readLine()?.trim(); if (timeL != null && timeL.contains("-->")) { val ts = timeL.split("-->"); if (ts.size >= 2) { val s = timeToMillis(ts[0].trim().replace(',', '.')); val eS = ts[1].trim().split(Regex("\\s+"))[0]; val e = timeToMillis(eS.replace(',', '.')); val b = StringBuilder(); var txtL: String? = r.readLine(); while (txtL != null && !txtL.isBlank()) { if (b.isNotEmpty()) b.append("\n"); b.append(txtL); txtL = r.readLine() }; if (txtL == null && b.isEmpty() && ts[0].trim().isNotEmpty()) { Log.w("SRTParser", "Malformed SRT end: $timeL") }; if (s != null && e != null && b.isNotEmpty() && e > s) { c.add(SubtitleCue(s, e, b.toString())) } else { Log.w("SRTParser", "Skip invalid SRT cue: $tL / $timeL") } } } } } } catch (e: Exception) { Log.e("SRTParser", "Parse SRT error", e); runOnUiThread { Toast.makeText(this, "SRT Parse Error", Toast.LENGTH_SHORT).show() } } finally { try { r.close() } catch (ioe: Exception) {} }; return c.sortedBy { it.startTimeMs } }
 
+    // ============================================
     // --- Time Parsing Helper ---
-    private fun timeToMillis(t: String): Long? { try { val p=t.split(":"); val msS: String; val sS: String; val lP=p.last(); val dI=lP.indexOf('.'); if(dI!=-1){sS=lP.substring(0, dI); msS=lP.substring(dI+1)}else{ sS=lP; msS="0" }; val msDigits=msS.filter{it.isDigit()}; if(msDigits.isEmpty()){Log.w("TimeParser","Bad ms: $t"); return null}; val ms=msDigits.padEnd(3,'0').take(3).toLong(); if(sS.isEmpty()||sS.any{!it.isDigit()}){Log.w("TimeParser","Bad secs: $t"); return null}; val s=sS.toLong(); if(s<0||s>59){Log.w("TimeParser","Bad secs val: $t"); return null}; return when(p.size){3->{if(p[1].isEmpty()||p[1].any{!it.isDigit()}||p[0].isEmpty()||p[0].any{!it.isDigit()}){Log.w("TimeParser","Bad H/M: $t"); return null}; val m=p[1].toLong(); val h=p[0].toLong(); if(m<0||m>59){Log.w("TimeParser","Bad min val: $t"); return null}; (h*3600000+m*60000+s*1000+ms)}2->{if(p[0].isEmpty()||p[0].any{!it.isDigit()}){Log.w("TimeParser","Bad M: $t"); return null}; val m=p[0].toLong(); if(m<0||m>59){Log.w("TimeParser","Bad min val: $t"); return null}; (m*60000+s*1000+ms)}else->{Log.w("TimeParser","Bad colon#: $t"); null}}}catch(e:Exception){Log.e("TimeParser","Time parse err: $t",e); return null}}
+    // 將時間字符串（HH:MM:SS.ms 或 MM:SS.ms 或 SS.ms）轉換為毫秒
+    // ============================================
+    
+    private fun timeToMillis(t: String): Long? {
+        try {
+            // 分割字符串為時:分:秒部分和毫秒部分
+            val p = t.split(":")  // 按冒號分割
+            val lP = p.last()     // 最後一部分（秒.毫秒）
+            val dI = lP.indexOf('.') // 找小數點位置
+            
+            // 分離秒數和毫秒數
+            val sS: String
+            val msS: String
+            if (dI != -1) {
+                sS = lP.substring(0, dI)      // 秒數部分
+                msS = lP.substring(dI + 1)    // 毫秒部分
+            } else {
+                sS = lP
+                msS = "0"
+            }
+            
+            // 驗證和提取毫秒（只取前 3 位）
+            val msDigits = msS.filter { it.isDigit() }
+            if (msDigits.isEmpty()) {
+                Log.w("TimeParser", "Bad ms: $t")
+                return null
+            }
+            val ms = msDigits.padEnd(3, '0').take(3).toLong()
+            
+            // 驗證秒數
+            if (sS.isEmpty() || sS.any { !it.isDigit() }) {
+                Log.w("TimeParser", "Bad secs: $t")
+                return null
+            }
+            val s = sS.toLong()
+            if (s < 0 || s > 59) {
+                Log.w("TimeParser", "Bad secs val: $t")
+                return null
+            }
+            
+            // 根據分割後的部分數量計算不同格式
+            return when (p.size) {
+                // 格式：HH:MM:SS.ms（3 個冒號）
+                3 -> {
+                    if (p[1].isEmpty() || p[1].any { !it.isDigit() } ||
+                        p[0].isEmpty() || p[0].any { !it.isDigit() }
+                    ) {
+                        Log.w("TimeParser", "Bad H/M: $t")
+                        return null
+                    }
+                    val m = p[1].toLong()  // 分鐘
+                    val h = p[0].toLong()  // 小時
+                    if (m < 0 || m > 59) {
+                        Log.w("TimeParser", "Bad min val: $t")
+                        return null
+                    }
+                    (h * 3600000 + m * 60000 + s * 1000 + ms)
+                }
+                // 格式：MM:SS.ms（2 個冒號）
+                2 -> {
+                    if (p[0].isEmpty() || p[0].any { !it.isDigit() }) {
+                        Log.w("TimeParser", "Bad M: $t")
+                        return null
+                    }
+                    val m = p[0].toLong()  // 分鐘
+                    if (m < 0 || m > 59) {
+                        Log.w("TimeParser", "Bad min val: $t")
+                        return null
+                    }
+                    (m * 60000 + s * 1000 + ms)
+                }
+                // 格式不正確
+                else -> {
+                    Log.w("TimeParser", "Bad colon#: $t")
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("TimeParser", "Time parse err: $t", e)
+            return null
+        }
+    }
 
+    
+    // ============================================
     // --- Overlay Permission and Service Handling ---
-    private fun handleLaunchOverlayClick() { Log.d(TAG, "Ensuring overlay service started."); if (checkOverlayPermission()) startOverlayService() else requestOverlayPermission() }
-    private fun checkOverlayPermission(): Boolean { val has = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) Settings.canDrawOverlays(this) else true; Log.d(TAG, "Overlay perm status: $has"); return has }
-    private fun requestOverlayPermission() { if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) { Log.d(TAG, "Requesting overlay perm."); Toast.makeText(this, "Need 'Draw over apps' permission.", Toast.LENGTH_LONG).show(); val i = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")); try { overlayPermissionLauncher.launch(i) } catch (e: Exception) { Log.e(TAG, "Can't launch overlay settings", e); Toast.makeText(this, "Can't open perm settings.", Toast.LENGTH_SHORT).show() } } }
-    private fun startOverlayService() { if (!checkOverlayPermission()) { Log.w(TAG, "Start service denied (no perm)"); requestOverlayPermission(); return }; Log.d(TAG, "Starting OverlayService..."); val i = Intent(this, OverlayService::class.java); try { startService(i) } catch (e: Exception) { Log.e(TAG, "Can't start OverlayService", e); Toast.makeText(this, "Failed to start overlay.", Toast.LENGTH_SHORT).show() } }
-    private fun stopOverlayService() { Log.d(TAG, "Stopping OverlayService..."); val i = Intent(this, OverlayService::class.java); stopService(i) }
-    private fun sendSubtitleUpdate(text: String) { val textToSend = if (isOverlayUIShown) text else ""; if (textToSend.isNotBlank()) { Log.d(TAG, "Broadcasting update: '$textToSend'") } else { Log.d(TAG, "Broadcasting empty subtitle update.") }; val i = Intent(ACTION_UPDATE_SUBTITLE_LOCAL).apply { putExtra(EXTRA_SUBTITLE_TEXT_LOCAL, textToSend) }; LocalBroadcastManager.getInstance(this).sendBroadcast(i) }
+    // 管理浮窗權限、服務啟動/停止、字幕廣播
+    // ============================================
+    
+    private fun handleLaunchOverlayClick() {
+        Log.d(TAG, "Ensuring overlay service started.")
+        
+        // ✅ 重置綠色按鈕位置（hide 後重新 show 時）
+        if (!isOverlayUIShown) {
+            Log.d(TAG, "Overlay was hidden, resetting overlay state...")
+            val resetIntent = Intent(OverlayService.ACTION_RESET_OVERLAY_POSITION)
+            LocalBroadcastManager.getInstance(this).sendBroadcast(resetIntent)
+        }
+        
+        if (checkOverlayPermission()) {
+            startOverlayService()
+        } else {
+            requestOverlayPermission()
+        }
+    }
+
+    
+    // 檢查是否有浮窗繪製權限
+    private fun checkOverlayPermission(): Boolean {
+        val has = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Settings.canDrawOverlays(this)
+        } else {
+            true  // Android M 以下預設擁有權限
+        }
+        Log.d(TAG, "Overlay perm status: $has")
+        return has
+    }
+
+    
+    
+    // 請求浮窗繪製權限
+    private fun requestOverlayPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Log.d(TAG, "Requesting overlay perm.")
+            Toast.makeText(this, "Need 'Draw over apps' permission.", Toast.LENGTH_LONG).show()
+            
+            val i = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+            try {
+                overlayPermissionLauncher.launch(i)
+            } catch (e: Exception) {
+                Log.e(TAG, "Can't launch overlay settings", e)
+                Toast.makeText(this, "Can't open perm settings.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    
+    // 啟動 OverlayService
+    private fun startOverlayService() {
+        if (!checkOverlayPermission()) {
+            Log.w(TAG, "Start service denied (no perm)")
+            requestOverlayPermission()
+            return
+        }
+        
+        Log.d(TAG, "Starting OverlayService...")
+        val i = Intent(this, OverlayService::class.java)
+        try {
+            startService(i)
+        } catch (e: Exception) {
+            Log.e(TAG, "Can't start OverlayService", e)
+            Toast.makeText(this, "Failed to start overlay.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // 停止 OverlayService
+    private fun stopOverlayService() {
+        Log.d(TAG, "Stopping OverlayService...")
+        val i = Intent(this, OverlayService::class.java)
+        stopService(i)
+    }
+    
+    // 廣播字幕更新到 OverlayService
+    private fun sendSubtitleUpdate(text: String) {
+        // ✅ 判斷是否顯示字幕（若 overlay 隱藏則發送空字符串）
+        val textToSend = if (isOverlayUIShown) text else ""
+        
+        if (textToSend.isNotBlank()) {
+            Log.d(TAG, "Broadcasting update: '$textToSend'")
+        } else {
+            Log.d(TAG, "Broadcasting empty subtitle update.")
+        }
+        
+        // ✅ 使用 companion 中定義的常數確保 action 一致
+        val i = Intent(ACTION_UPDATE_SUBTITLE_LOCAL).apply {
+            putExtra(EXTRA_SUBTITLE_TEXT_LOCAL, textToSend)
+        }
+        LocalBroadcastManager.getInstance(this).sendBroadcast(i)
+        Log.d(TAG, "Subtitle broadcast sent successfully")
+    }
 
 
     // --- Playback Control ---
