@@ -23,7 +23,9 @@ class OverlayService : Service() {
         // These constants MUST match the ones used in MainActivity
         const val ACTION_UPDATE_SUBTITLE = "com.example.simplevttplayer.UPDATE_SUBTITLE"
         const val EXTRA_SUBTITLE_TEXT = "subtitle_text"
-        const val ACTION_PAUSE_PLAY = "com.example.simplevttplayer.PAUSE_PLAY"
+        const val ACTION_PAUSE_PLAY = "com.example.simplevttplayer.PAUSE_PLAY"    
+        const val ACTION_RESET_OVERLAY_POSITION = "com.example.simplevttplayer.RESET_OVERLAY_POSITION"  // ✅ 新增重置 action
+        
         val TAG: String = OverlayService::class.java.simpleName
     }
 
@@ -31,7 +33,8 @@ class OverlayService : Service() {
     private lateinit var overlayView: View
     private lateinit var textViewOverlaySubtitle: TextView
     private lateinit var params: WindowManager.LayoutParams    
-        private var totalMoveDistancePixels = 0  // ✅ 追蹤總共向上移動了多少
+    //變數沒用
+    //private var totalMoveDistancePixels = 0  // ✅ 追蹤總共向上移動了多少
 
     // ⬇️ 添加這 2 行
     //private var lastUpdateTime = 0L
@@ -42,16 +45,20 @@ class OverlayService : Service() {
     // Listens for broadcasts from MainActivity containing subtitle text
     private val subtitleUpdateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
+            Log.d(TAG, "Broadcast received! Action: ${intent?.action}")  // ✅ 加 Log 確認收到
+
             when (intent?.action) {
                 ACTION_UPDATE_SUBTITLE -> {
                     val subtitleText = intent.getStringExtra(EXTRA_SUBTITLE_TEXT) ?: ""
                     Log.d(TAG, "Received subtitle broadcast: '$subtitleText'")
                     updateSubtitleText(subtitleText)
                 }
-                ACTION_PAUSE_PLAY -> {
-                    isPaused = intent.getBooleanExtra("is_paused", false)
-                    updateSubtitlePauseState()
-                    Log.d(TAG, "Received pause/play state: isPaused=$isPaused")
+                ACTION_RESET_OVERLAY_POSITION -> {  // ✅ 新增重置邏輯
+                Log.d(TAG, "Received reset overlay position request")
+                resetOverlayPosition()
+                }
+                else -> {
+                    Log.w(TAG, "Unknown broadcast action: ${intent?.action}")
                 }
             }
         }
@@ -118,8 +125,9 @@ class OverlayService : Service() {
         
             // Register the broadcast receiver using LocalBroadcastManager
             val filter = IntentFilter().apply {
-                addAction(ACTION_UPDATE_SUBTITLE)
-                addAction(ACTION_PAUSE_PLAY)
+                addAction(ACTION_UPDATE_SUBTITLE)              // ✅ 用 companion 中定義的常數
+                addAction(ACTION_PAUSE_PLAY)                   // ✅ 用 companion 中定義的常數
+                addAction(ACTION_RESET_OVERLAY_POSITION)       // ✅ 新增重置
             }
             LocalBroadcastManager.getInstance(this).registerReceiver(subtitleUpdateReceiver, filter)
             Log.d(TAG, "BroadcastReceiver registered for all actions.")
@@ -188,10 +196,10 @@ class OverlayService : Service() {
             if (text.isBlank()) {
                 // Hide the entire overlay view if the text is blank/empty
                 // Check current visibility to avoid redundant calls
-                //if (overlayView.visibility != View.GONE) {
+                if (overlayView.visibility != View.GONE) {
                     Log.d(TAG, "Hiding overlay view (blank text received).")
                     overlayView.visibility = View.GONE
-                
+                }
             } else {
                 // Show the overlay view and set the text if text is not blank
                 // Check current visibility to avoid redundant calls
@@ -231,33 +239,42 @@ class OverlayService : Service() {
         Log.d(TAG, "Updated subtitle color: isPaused=$isPaused, color=${if (isPaused) "RED" else "WHITE"}")
     }
     private fun moveOverlayUpByButtonClick() {
-    if (::params.isInitialized && ::overlayView.isInitialized) {
-        val moveDistance = 18
-                totalMoveDistancePixels += moveDistance  // ✅ 只加這一行
-        Log.d(TAG, "Moving overlay up by $moveDistance pixels")
-        params.y += moveDistance  // ✅ 改成 -= 才是向上
-        try {
-            windowManager.updateViewLayout(overlayView, params)
-            Log.d(TAG, "Overlay moved up. New Y: ${params.y}")
+        if (::params.isInitialized && ::overlayView.isInitialized) {
+            val moveDistance = 18
+            Log.d(TAG, "Moving overlay up by $moveDistance pixels")
+            params.y += moveDistance  // ✅ 改成 -= 才是向上
+            try {
+                windowManager.updateViewLayout(overlayView, params)
+                Log.d(TAG, "Overlay moved up. New Y: ${params.y}")
             } catch (e: Exception) {
-            Log.e(TAG, "Error moving overlay up", e)
+                Log.e(TAG, "Error moving overlay up", e)
             }
         } else {
             Log.w(TAG, "Cannot move overlay: views not initialized")
+        }
+    }
 
-                  fun resetOverlayPosition() {
+        
+    private fun resetOverlayPosition() {
         if (::params.isInitialized && ::overlayView.isInitialized) {
             params.y = 0  // 重置回最下面
-            totalMoveDistancePixels = 0  // ✅ 同時重置已移動的距離
+            //totalMoveDistancePixels = 0  // ✅ 同時重置已移動的距離
+            
             try {
                 windowManager.updateViewLayout(overlayView, params)
                 Log.d(TAG, "Overlay position reset to Y: 0, Move distance reset to 0")
             } catch (e: Exception) {
                 Log.e(TAG, "Error resetting overlay position", e)
             }
-        }
-    }
+        } else {
+            Log.w(TAG, "Cannot move overlay: views not initialized")
         }
     }
 
+
+
+
+
 }
+
+
