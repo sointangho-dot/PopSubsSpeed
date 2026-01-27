@@ -673,8 +673,8 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "Screen allowed to turn off.")
 
         // Update paused time only when actually pausing
-        handler.removeCallbacks(updateRunnable)  // ✅ 最先做
         pausedElapsedTimeMillis = (System.nanoTime() - startTimeNanos) / 1_000_000
+        handler.removeCallbacks(updateRunnable)
 
         // Notify overlay of pause state
         val intent = Intent(OverlayService.ACTION_PAUSE_PLAY).apply {
@@ -739,21 +739,21 @@ class MainActivity : AppCompatActivity() {
         override fun run() {
             if (!isPlaying) return
             val rawElapsedMillis = (System.nanoTime() - startTimeNanos) / 1_000_000
-            val displayElapsedMillis = (rawElapsedMillis * playbackSpeed).toLong()  // 應用速度
-            textViewCurrentTime.text = formatTime(displayElapsedMillis)
+            val elapsedMillis = (rawElapsedMillis * playbackSpeed).toLong()  // 應用速度
+            textViewCurrentTime.text = formatTime(elapsedMillis)
 
             // Update Slider only if user isn't dragging it
             // Also check bounds to prevent crash if time slightly exceeds max due to timing
             if (!sliderPlayback.isPressed) {
-                if (displayElapsedMillis.toFloat() >= sliderPlayback.valueFrom && displayElapsedMillis.toFloat() <= sliderPlayback.valueTo) {
-                    sliderPlayback.value = displayElapsedMillis.toFloat()
-                } else if (displayElapsedMillis.toFloat() > sliderPlayback.valueTo) {
+                if (elapsedMillis.toFloat() >= sliderPlayback.valueFrom && elapsedMillis.toFloat() <= sliderPlayback.valueTo) {
+                    sliderPlayback.value = elapsedMillis.toFloat()
+                } else if (elapsedMillis.toFloat() > sliderPlayback.valueTo) {
                     // If time exceeded max, clamp slider value to max
                     sliderPlayback.value = sliderPlayback.valueTo
                 }
             }
 
-            val activeCue = findCueForTime(rawElapsedMillis)
+            val activeCue = findCueForTime(elapsedMillis)
             val newText = activeCue?.text ?: ""
             var textChanged = false
             if (textViewSubtitle.text != newText) { textViewSubtitle.text = newText; textChanged = true }
@@ -761,7 +761,7 @@ class MainActivity : AppCompatActivity() {
 
             if (subtitleCues.isNotEmpty()) {
                 val lastCueEndTime = subtitleCues.last().endTimeMs
-                if (rawElapsedMillis >= lastCueEndTime) {
+                if (elapsedMillis >= lastCueEndTime) {
                     // Call pausePlayback first to handle flags/state/button icon
                     pausePlayback()
                     // Set final UI state after pausing
