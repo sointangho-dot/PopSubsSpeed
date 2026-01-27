@@ -258,9 +258,41 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // ============================================
     // --- File Handling & Parsing ---
-    @SuppressLint("Range") private fun getFileName(uri: Uri): String? { var f: String? = null; try { contentResolver.query(uri, null, null, null, null)?.use { c -> if (c.moveToFirst()) { val i = c.getColumnIndex(OpenableColumns.DISPLAY_NAME); if (i != -1) f = c.getString(i) } } } catch (e: Exception) { Log.e(TAG, "getFileName error: $uri", e) }; if (f == null) { f = uri.path; val cut = f?.lastIndexOf('/'); if (cut != -1 && cut != null) { f = f?.substring(cut + 1) } }; return f }
-    private fun openFilePicker() { val i = Intent(Intent.ACTION_OPEN_DOCUMENT).apply { addCategory(Intent.CATEGORY_OPENABLE); type = "*/*" }; selectSubtitleFileLauncher.launch(i) }
+    // ============================================
+    
+    @SuppressLint("Range")
+    private fun getFileName(uri: Uri): String? {
+        var f: String? = null
+        try {
+            contentResolver.query(uri, null, null, null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    val i = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (i != -1) f = c.getString(i)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "getFileName error: $uri", e)
+        }
+        
+        if (f == null) {
+            f = uri.path
+            val cut = f?.lastIndexOf('/')
+            if (cut != -1 && cut != null) {
+                f = f?.substring(cut + 1)
+            }
+        }
+        return f
+    }
+    
+    private fun openFilePicker() {
+        val i = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+        }
+        selectSubtitleFileLauncher.launch(i)
+    }
 
     private fun loadAndParseSubtitleFile(uri: Uri, format: String) {
         Log.d(TAG, "Attempting to load $format file: $uri")
@@ -279,13 +311,151 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) { Log.e(TAG, "load/parse $format error", e); Toast.makeText(this, "Load ${format.uppercase()} error: ${e.message}", Toast.LENGTH_LONG).show(); resetPlaybackStateOnError() }
     }
 
+    // ============================================
     // --- VTT Parsing Logic ---
-    private fun parseVtt(inputStream: InputStream): List<SubtitleCue> { val c=mutableListOf<SubtitleCue>(); val r=inputStream.bufferedReader(Charsets.UTF_8); try { var h=r.readLine(); if(h?.startsWith("\uFEFF")==true){h=h.substring(1)}; if(h==null||!h.trim().startsWith("WEBVTT")){Log.e("VTTParser","Bad Header: '$h'"); runOnUiThread { Toast.makeText(this,"Bad VTT Header",Toast.LENGTH_LONG).show() }; return emptyList()}; var l:String?; while(r.readLine().also{l=it}!=null){ val t=l?.trim()?:""; if(t.isEmpty()||t.startsWith("NOTE")){continue}; if(t.contains("-->")){parseTimeAndTextVtt(t,r,c)}else{Log.w("VTTParser","Skip line: $t")}} }catch(e:Exception){Log.e("VTTParser","Parse VTT Error",e); runOnUiThread { Toast.makeText(this,"VTT Process Error",Toast.LENGTH_SHORT).show() }}finally{try{r.close()}catch(e:Exception){}}; return c.sortedBy{it.startTimeMs}}
-    private fun parseTimeAndTextVtt(tL: String, r: BufferedReader, c: MutableList<SubtitleCue>) { try { val t=tL.split("-->"); if(t.size<2){Log.w("VTTParser","Bad time: $tL"); return}; val s=timeToMillis(t[0].trim()); val eS=t[1].trim().split(Regex("\\s+"))[0]; val e=timeToMillis(eS); val b=StringBuilder(); var x:String?=r.readLine(); while(x!=null&&x.isNotBlank()){if(b.isNotEmpty())b.append("\n"); b.append(x); x=r.readLine()}; if(s!=null&&e!=null&&b.isNotEmpty()){if(e>s){c.add(SubtitleCue(s,e,b.toString()))}else{Log.w("VTTParser","End<=Start: $tL")}}else{Log.w("VTTParser","Bad cue: $tL")}}catch(e:Exception){Log.e("VTTParser","Parse cue error: $tL", e)}}
+    // ============================================
+    
+    private fun parseVtt(inputStream: InputStream): List<SubtitleCue> {
+        val c = mutableListOf<SubtitleCue>()
+        val r = inputStream.bufferedReader(Charsets.UTF_8)
+        
+        try {
+            var h = r.readLine()
+            if (h?.startsWith("\uFEFF") == true) {
+                h = h.substring(1)
+            }
+            if (h == null || !h.trim().startsWith("WEBVTT")) {
+                Log.e("VTTParser", "Bad Header: '$h'")
+                runOnUiThread {
+                    Toast.makeText(this, "Bad VTT Header", Toast.LENGTH_LONG).show()
+                }
+                return emptyList()
+            }
+            
+            var l: String?
+            while (r.readLine().also { l = it } != null) {
+                val t = l?.trim() ?: ""
+                if (t.isEmpty() || t.startsWith("NOTE")) {
+                    continue
+                }
+                if (t.contains("-->")) {
+                    parseTimeAndTextVtt(t, r, c)
+                } else {
+                    Log.w("VTTParser", "Skip line: $t")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("VTTParser", "Parse VTT Error", e)
+            runOnUiThread {
+                Toast.makeText(this, "VTT Process Error", Toast.LENGTH_SHORT).show()
+            }
+        } finally {
+            try {
+                r.close()
+            } catch (e: Exception) {}
+        }
+        
+        return c.sortedBy { it.startTimeMs }
+    }
+    
+    private fun parseTimeAndTextVtt(
+        tL: String,
+        r: BufferedReader,
+        c: MutableList<SubtitleCue>
+    ) {
+        try {
+            val t = tL.split("-->")
+            if (t.size < 2) {
+                Log.w("VTTParser", "Bad time: $tL")
+                return
+            }
+            
+            val s = timeToMillis(t[0].trim())
+            val eS = t[1].trim().split(Regex("\\s+"))[0]
+            val e = timeToMillis(eS)
+            
+            val b = StringBuilder()
+            var x: String? = r.readLine()
+            while (x != null && x.isNotBlank()) {
+                if (b.isNotEmpty()) b.append("\n")
+                b.append(x)
+                x = r.readLine()
+            }
+            
+            if (s != null && e != null && b.isNotEmpty()) {
+                if (e > s) {
+                    c.add(SubtitleCue(s, e, b.toString()))
+                } else {
+                    Log.w("VTTParser", "End<=Start: $tL")
+                }
+            } else {
+                Log.w("VTTParser", "Bad cue: $tL")
+            }
+        } catch (e: Exception) {
+            Log.e("VTTParser", "Parse cue error: $tL", e)
+        }
+    }
+    
+    // ============================================
+    // --- SRT Parser Helper ---
+    // 解析 SRT 字幕檔案為字幕 cues 列表
+    // ============================================
+    
+    private fun parseSrt(inputStream: InputStream): List<SubtitleCue> {
+        val c = mutableListOf<SubtitleCue>()
+        val r = inputStream.bufferedReader(Charsets.UTF_8)
+        
+        try {
+            var l: String?
+            while (r.readLine().also { l = it } != null) {
+                val tL = l?.trim()
+                if (tL.isNullOrEmpty()) continue
+                
+                if (tL.toIntOrNull() != null) {
+                    val timeL = r.readLine()?.trim()
+                    if (timeL != null && timeL.contains("-->")) {
+                        val ts = timeL.split("-->")
+                        if (ts.size >= 2) {
+                            val s = timeToMillis(ts[0].trim().replace(',', '.'))
+                            val eS = ts[1].trim().split(Regex("\\s+"))[0]
+                            val e = timeToMillis(eS.replace(',', '.'))
+                            
+                            val b = StringBuilder()
+                            var txtL: String? = r.readLine()
+                            while (txtL != null && !txtL.isBlank()) {
+                                if (b.isNotEmpty()) b.append("\n")
+                                b.append(txtL)
+                                txtL = r.readLine()
+                            }
+                            
+                            if (txtL == null && b.isEmpty() && ts[0].trim().isNotEmpty()) {
+                                Log.w("SRTParser", "Malformed SRT end: $timeL")
+                            }
+                            
+                            if (s != null && e != null && b.isNotEmpty() && e > s) {
+                                c.add(SubtitleCue(s, e, b.toString()))
+                            } else {
+                                Log.w("SRTParser", "Skip invalid SRT cue: $tL / $timeL")
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("SRTParser", "Parse SRT error", e)
+            runOnUiThread {
+                Toast.makeText(this, "SRT Parse Error", Toast.LENGTH_SHORT).show()
+            }
+        } finally {
+            try {
+                r.close()
+            } catch (ioe: Exception) {}
+        }
+        
+        return c.sortedBy { it.startTimeMs }
+    }
 
-    // --- SRT Parsing Logic ---
-    private fun parseSrt(inputStream: InputStream): List<SubtitleCue> { val c=mutableListOf<SubtitleCue>(); val r=inputStream.bufferedReader(Charsets.UTF_8); try { var l: String?; while (r.readLine().also { l = it } != null) { val tL = l?.trim(); if (tL.isNullOrEmpty()) continue; if (tL.toIntOrNull() != null) { val timeL = r.readLine()?.trim(); if (timeL != null && timeL.contains("-->")) { val ts = timeL.split("-->"); if (ts.size >= 2) { val s = timeToMillis(ts[0].trim().replace(',', '.')); val eS = ts[1].trim().split(Regex("\\s+"))[0]; val e = timeToMillis(eS.replace(',', '.')); val b = StringBuilder(); var txtL: String? = r.readLine(); while (txtL != null && !txtL.isBlank()) { if (b.isNotEmpty()) b.append("\n"); b.append(txtL); txtL = r.readLine() }; if (txtL == null && b.isEmpty() && ts[0].trim().isNotEmpty()) { Log.w("SRTParser", "Malformed SRT end: $timeL") }; if (s != null && e != null && b.isNotEmpty() && e > s) { c.add(SubtitleCue(s, e, b.toString())) } else { Log.w("SRTParser", "Skip invalid SRT cue: $tL / $timeL") } } } } } } catch (e: Exception) { Log.e("SRTParser", "Parse SRT error", e); runOnUiThread { Toast.makeText(this, "SRT Parse Error", Toast.LENGTH_SHORT).show() } } finally { try { r.close() } catch (ioe: Exception) {} }; return c.sortedBy { it.startTimeMs } }
-
+    
     // ============================================
     // --- Time Parsing Helper ---
     // 將時間字符串（HH:MM:SS.ms 或 MM:SS.ms 或 SS.ms）轉換為毫秒
