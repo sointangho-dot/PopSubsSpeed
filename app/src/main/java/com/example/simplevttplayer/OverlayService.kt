@@ -1,4 +1,4 @@
-package com.example.simplevttplayer // **IMPORTANT: Adjust package name if needed!**
+package com.example.simplevttplayer // **IMPORTANT: Adjust package name if needed!** //【重要】必須調整套件名稱如需要！
 
 import android.app.Service
 import android.widget.Toast
@@ -15,12 +15,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
-import androidx.localbroadcastmanager.content.LocalBroadcastManager // Use LocalBroadcastManager
+import androidx.localbroadcastmanager.content.LocalBroadcastManager // Use LocalBroadcastManager //使用實時廣播管理
 
 class OverlayService : Service() {
 
     companion object {
-        // These constants MUST match the ones used in MainActivity
+        // These constants MUST match the ones used in MainActivity //這些常數子必須與MainActivity中使用的常數子一致
         const val ACTION_UPDATE_SUBTITLE = "com.example.simplevttplayer.UPDATE_SUBTITLE"
         const val EXTRA_SUBTITLE_TEXT = "subtitle_text"
         val TAG: String = OverlayService::class.java.simpleName
@@ -31,7 +31,7 @@ class OverlayService : Service() {
     private lateinit var textViewOverlaySubtitle: TextView
     private lateinit var params: WindowManager.LayoutParams
 
-    // Listens for broadcasts from MainActivity containing subtitle text
+    // Listens for broadcasts from MainActivity containing subtitle text //皁值 MainActivity 從需逗接收互關字幕的馨播
     private val subtitleUpdateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == ACTION_UPDATE_SUBTITLE) {
@@ -118,29 +118,29 @@ class OverlayService : Service() {
                 Log.d(TAG, "Overlay view not attached or not initialized, no removal needed.")
             }
         } catch (e: Exception) {
-            // Catch errors during view removal (e.g., view already removed)
+            // Catch errors during view removal (e.g., view already removed) //得捕在加驗休沐時可能的錯誤
             Log.e(TAG, "Error removing overlay view", e)
         }
 
-        // Unregister the broadcast receiver
+        // Unregister the broadcast receiver //取消註冊広播接收者
         try {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(subtitleUpdateReceiver)
             Log.d(TAG, "SubtitleUpdateReceiver unregistered.")
         } catch (e: IllegalArgumentException) {
-            // Can happen if receiver wasn't registered successfully or already unregistered
+            // Can happen if receiver wasn't registered successfully or already unregistered //如果接收者沒有成功註冊或已經取消註冊，就會發生
             Log.w(TAG, "Receiver possibly already unregistered or not registered.", e)
         }
     }
 
-    // *** THIS FUNCTION CONTAINS THE LOGIC TO HIDE/SHOW BASED ON TEXT ***
-    // Function to update the text view in the overlay
+    // *** THIS FUNCTION CONTAINS THE LOGIC TO HIDE/SHOW BASED ON TEXT *** //此函數含有根據文本通与顯示或隱藏的那輯輫
+    // Function to update the text view in the overlay //用於更新覆蓋層中文字檔案的函数
     private fun updateSubtitleText(text: String) {
-        // Check if views are initialized before accessing them
-        // This prevents crashes if update is called before onCreate finishes or after onDestroy starts
+        // Check if views are initialized before accessing them //在存取親不之前棃查查看是否已初始化
+        // This prevents crashes if update is called before onCreate finishes or after onDestroy starts //這止是在onCreate後或onDestroy前榨丢更新時的捵掩
         if (::textViewOverlaySubtitle.isInitialized && ::overlayView.isInitialized) {
-             Always show the overlay, keep it visible even if no subtitle
+             Always show the overlay, keep it visible even if no subtitle //永遠顯示覆蓋層上文字即使沒有字幕
             overlayView.visibility = View.VISIBLE
-            // Only update text if it's not blank
+            // Only update text if it's not blank //僅有一不是空白時才更新文字
             if (text.isNotBlank()) {
                 textViewOverlaySubtitle.text = text
             }
