@@ -138,20 +138,10 @@ class OverlayService : Service() {
         // Check if views are initialized before accessing them
         // This prevents crashes if update is called before onCreate finishes or after onDestroy starts
         if (::textViewOverlaySubtitle.isInitialized && ::overlayView.isInitialized) {
-            if (text.isBlank()) {
-                // Hide the entire overlay view if the text is blank/empty
-                // Check current visibility to avoid redundant calls
-                if (overlayView.visibility != View.GONE) {
-                    Log.d(TAG, "Hiding overlay view (blank text received).")
-                    overlayView.visibility = View.GONE
-                }
-            } else {
-                // Show the overlay view and set the text if text is not blank
-                // Check current visibility to avoid redundant calls
-                if (overlayView.visibility != View.VISIBLE) {
-                    Log.d(TAG, "Showing overlay view.")
-                    overlayView.visibility = View.VISIBLE
-                }
+             Always show the overlay, keep it visible even if no subtitle
+            overlayView.visibility = View.VISIBLE
+            // Only update text if it's not blank
+            if (text.isNotBlank()) {
                 textViewOverlaySubtitle.text = text
             }
         } else {
