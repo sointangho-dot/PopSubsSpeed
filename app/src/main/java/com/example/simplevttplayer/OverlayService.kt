@@ -138,7 +138,7 @@ class OverlayService : Service() {
         // Check if views are initialized before accessing them //在存取親不之前棃查查看是否已初始化
         // This prevents crashes if update is called before onCreate finishes or after onDestroy starts //這止是在onCreate後或onDestroy前榨丢更新時的捵掩
         if (::textViewOverlaySubtitle.isInitialized && ::overlayView.isInitialized) {
-             Always show the overlay, keep it visible even if no subtitle //永遠顯示覆蓋層上文字即使沒有字幕
+             //Always show the overlay, keep it visible even if no subtitle //永遠顯示覆蓋層上文字即使沒有字幕
             overlayView.visibility = View.VISIBLE
             // Only update text if it's not blank //僅有一不是空白時才更新文字
             if (text.isNotBlank()) {
